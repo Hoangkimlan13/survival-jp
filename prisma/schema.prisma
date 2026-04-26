@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// *
+/// * ================= DAY =================
+model Day {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  order       Int
+  isPublished Boolean @default(false)
+  endings     Ending[]
+  stages      Stage[]
+  stories     Story[]
+}
+
+/// *
+/// * ================= STAGE =================
+model Stage {
+  id           Int        @id @default(autoincrement())
+  name         String
+  order        Int
+  dayId        Int
+  minQuestions Int        @default(5)
+  maxQuestions Int        @default(10)
+  createdAt    DateTime   @default(now())
+  isPublished  Boolean    @default(false)
+  questions    Question[]
+  day          Day        @relation(fields: [dayId], references: [id])
+  stories      Story[]
+}
+
+/// *
+/// * ================= QUESTION =================
+model Question {
+  id          Int      @id @default(autoincrement())
+  question    String
+  translation String?
+  stageId     Int
+  isPublished Boolean  @default(false)
+  difficulty  Int      @default(1)
+  type        String   @default("choice")
+  hotScore    Float    @default(0)
+  playCount   Int      @default(0)
+  tags        String[]
+  wrongCount  Int      @default(0)
+  choices     Choice[]
+  stage       Stage    @relation(fields: [stageId], references: [id])
+}
+
+/// *
+/// * ================= CHOICE =================
+model Choice {
+  id          Int      @id @default(autoincrement())
+  text        String
+  feedback    String?
+  questionId  Int
+  translation String?
+
+  score       Int      @default(0)
+
+  isCorrect   Boolean  @default(false)
+
+  quality     ChoiceQuality @default(OK)
+
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+enum ChoiceQuality {
+  PERFECT
+  GOOD
+  OK
+  BAD
+}
+
+model Story {
+  id        Int           @id @default(autoincrement())
+  title     String?
+  content   String
+  type      String        @default("stage")
+  order     Int           @default(0)
+  stageId   Int?
+  dayId     Int?
+  createdAt DateTime      @default(now())
+  isActive  Boolean       @default(true)
+  rarity    Int           @default(1)
+  usedCount Int           @default(0)
+  weight    Int           @default(1)
+  trigger   StoryTrigger?
+  isDraft   Boolean       @default(true)
+  day       Day?          @relation(fields: [dayId], references: [id])
+  stage     Stage?        @relation(fields: [stageId], references: [id])
+}
+
+/// *
+/// * ================= ENDING =================
+model Ending {
+  id      Int    @id @default(autoincrement())
+
+  type    String
+  title   String
+  message String
+
+  image   String?
+  isDraft Boolean @default(true)
+
+  dayId   Int     
+  day     Day @relation(fields: [dayId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model GameMode {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
+  name        String
+  description String?
+  config      Json
+}
+
+/// *
+/// * ================= ADMIN =================
+model AdminUser {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+}
+
+enum StoryTrigger {
+  GOOD
+  MEDIUM
+  BAD
+  WIN
+  LOSE
+  COMBO_3
+}

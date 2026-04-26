@@ -1,0 +1,278 @@
+/* ROOT */
+.container {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+.header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  backdrop-filter: blur(14px);
+  background: var(--sheet-bg);
+
+  border-bottom: 1px solid var(--btn-border);
+}
+
+.dark .header {
+  background: rgba(20,20,20,0.7);
+}
+
+.header button {
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  color: var(--text);
+}
+
+/* CONTENT */
+.content {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: 90px;
+}
+
+/* DRAWER */
+.drawer {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.25s;
+  z-index: 20;
+}
+
+.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.show button {
+  border: none;
+  background: none;
+  display: flex;
+  align-items: center;
+  color: var(--text);
+}
+
+.drawerContent {
+  width: 260px;
+  height: 100%;
+  background: var(--sheet-bg);
+
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  transform: translateX(-100%);
+  transition: 0.3s;
+
+  box-shadow: 10px 0 40px rgba(0,0,0,0.25);
+}
+
+.show .drawerContent {
+  transform: translateX(0);
+}
+
+.drawerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+
+.groupTitle {
+  margin-top: 12px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.5;
+  padding-left: 6px;
+}
+
+/* NAV ITEM */
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  text-decoration: none;
+  color: var(--text);
+  opacity: 0.75;
+
+  transition: all 0.2s ease;
+}
+
+.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 4px;
+  border-radius: 4px;
+  background: #6366f1;
+}
+
+.navItem span:first-child {
+  font-size: 22px;
+}
+
+.navItem:hover:not(.active) {
+  background: rgba(0,0,0,0.05);
+  opacity: 1;
+}
+
+.dark .navItem:hover:not(.active) {
+  background: rgba(255,255,255,0.06);
+}
+
+/* ACTIVE */
+.active {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: white !important;
+  opacity: 1;
+
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+  transform: translateX(2px) scale(1.02);
+}
+/* TABBAR */
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  height: 64px;
+
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  backdrop-filter: blur(14px);
+  background: var(--sheet-bg);
+
+  border-top: 1px solid var(--btn-border);
+}
+
+.dark .tabbar {
+  background: rgba(20,20,20,0.7);
+}
+
+.tabbar a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 24px;
+  opacity: 0.5;
+}
+
+.tabbar .active {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* CARD */
+.card {
+  background: var(--sheet-bg);
+  border-radius: 18px;
+  padding: 16px;
+
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.dark .card {
+  box-shadow: none;
+}
+
+.card h3 {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.card p {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* SAFE AREA */
+.tabbar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--btn-border);
+  background: var(--sheet-bg);
+  color: var(--text);
+}
+
+.button {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #3b82f6;
+  color: white;
+}
+
+.title {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+
+
+.logout {
+  margin-top: auto;
+  border-top: 1px solid var(--btn-border);
+  padding-top: 12px;
+  color: #ef4444;
+}
+
+.logout:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+
+
+@media (min-width: 768px) {
+  .tabbar {
+    display: none;
+  }
+
+}

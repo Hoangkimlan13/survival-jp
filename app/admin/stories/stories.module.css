@@ -1,0 +1,405 @@
+/* ================= ROOT WRAPPER ================= */
+.wrapper {
+  display: flex;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  overflow: hidden;
+}
+
+/* ================= COLUMN ================= */
+.col {
+  width: 25%;
+  border-right: 1px solid var(--border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ================= STORY / EDITOR ================= */
+.editor {
+  width: 50%;
+  padding: 16px;
+  overflow-y: auto;
+  background: var(--sheet-bg);
+  border-left: 1px solid var(--border);
+}
+
+/* ================= HEADER ================= */
+.titleH3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+}
+
+
+/* ================= GROUP BOX ================= */
+.groupBox {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* title group */
+.groupTitle {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.9;
+}
+
+/* count badge */
+.groupCount {
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* ================= STORY META (STATUS) ================= */
+.storyMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* tag base */
+.statusTag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* nháp */
+.draft {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+/* công khai */
+.published {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+/* content preview */
+.storyPreview {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+
+/* ================= BUTTON ================= */
+.addBtn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: none;
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.addBtn:hover {
+  opacity: 0.85;
+}
+
+/* ================= ITEM LIST ================= */
+.scroll {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+.item {
+  background: var(--card);
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  border: 1px solid transparent;
+}
+
+.item:hover {
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+
+.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.item:hover {
+  border-color: var(--border);
+  transform: translateY(-1px);
+}
+
+.active:hover {
+  opacity: 0.95;
+}
+
+.item b {
+  font-size: 13px;
+  display: block;
+}
+
+.item p {
+  font-size: 12px;
+  opacity: 0.75;
+  margin: 4px 0 0;
+}
+
+/* ================= EMPTY STATE ================= */
+.emptyText {
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.emptyBox {
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* ================= FORM ================= */
+.editor input,
+.editor textarea,
+.editor select {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+}
+
+.editor textarea {
+  min-height: 160px;
+  resize: vertical;
+}
+
+
+
+/* ================= TOGGLE STATUS (PRO STYLE) ================= */
+.toggleRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  margin-top: 12px;
+}
+
+/* label không còn flex:1 nữa */
+.toggleRow label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 10px 12px;
+  border-radius: 10px;
+
+  border: 1px solid var(--border);
+  background: var(--card);
+
+  cursor: pointer;
+  transition: 0.2s;
+
+  font-size: 13px;
+  user-select: none;
+}
+
+/* hover */
+.toggleRow label:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* radio ẩn đi cho đẹp */
+.toggleRow input[type="radio"] {
+  display: none;
+}
+
+/* trạng thái active (QUAN TRỌNG NHẤT) */
+.toggleRow label:has(input[type="radio"]:checked) {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
+/* ================= ACTIONS ================= */
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btnAdd,
+.btnUpdate,
+.btnDelete {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: white;
+}
+
+.btnAdd {
+  background: var(--success);
+  color: white;
+}
+
+.btnUpdate {
+  background: var(--primary);
+  color: white;
+}
+
+.btnDelete {
+  background: var(--danger);
+  color: white;
+}
+
+/* hover cho tất cả button */
+.btnAdd,
+.btnUpdate,
+.btnDelete {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+
+.btnAdd:hover,
+.btnUpdate:hover,
+.btnDelete:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+/* ================= TEMPLATE ROW ================= */
+.templateRow {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.templateRow button {
+  flex: 1;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ================= SCROLLBAR ================= */
+.scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 10px;
+}
+
+
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0,0,0,0.9);
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  z-index: 99999;
+  font-size: 14px;
+  animation: slideIn 0.25s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 1024px) {
+  .wrapper {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .col {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    max-height: 250px;
+  }
+
+  .editor {
+    width: 100%;
+    border-left: none;
+  }
+
+  .headerRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .addBtn {
+    width: 100%;
+  }
+
+  .templateRow {
+    flex-direction: column;
+  }
+}

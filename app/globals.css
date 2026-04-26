@@ -1,26 +1,444 @@
-@import "tailwindcss";
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+
+  /* ===== FONT SYSTEM ===== */
+  --font-ui: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-jp: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --font-vn: "Noto Sans VN", "Inter", sans-serif;
+
+  --bg: #f6f7f9;
+  --text: #1c1c1e;
+  --sheet-bg: #ffffff;
+  --btn-bg: #ffffff;
+  --btn-text: #1c1c1e;
+  --btn-border: #e5e7eb;   
+
+  --card: #ffffff;
+  --border: #e5e7eb;
+
+  --input-bg: #ffffff;
+
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+
+  --success: #22c55e;
+  --success-hover: #16a34a;
+
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+
+  --info: #0ea5e9;
+  --info-hover: #0284c7;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+.dark {
+  --bg: #12161c;
+  --text: #f2f5f7;
+  --sheet-bg: #1c1c1e;
+  --btn-bg: #2c2c2e;
+  --btn-text: #f2f2f2;
+  --btn-border: #3a3a3c; 
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --card: #1e293b;
+  --border: #334155;
+
+  --input-bg: #020617;
+
+  --primary: #818cf8;
+  --primary-hover: #6366f1;
+
+  --success: #22c55e;
+  --success-hover: #16a34a;
+
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+
+  --info: #38bdf8;
+  --info-hover: #0ea5e9;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display";
+  transition: all 0.35s ease;
+}
+
+/* ===== SWITCH ===== */
+.track {
+  width: 56px;
+  height: 30px;
+  border-radius: 999px;
+
+  background: #d1d5db;
+  position: relative;
+
+  transition: 0.35s ease;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.track.on {
+  background: #22c55e;
+}
+
+.thumb {
+  width: 24px;
+  height: 24px;
+
+  position: absolute;
+  top: 3px;
+  left: 3px;
+
+  border-radius: 50%;
+  background: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 12px;
+
+  transition: 0.35s ease;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+}
+
+.track.on .thumb {
+  transform: translateX(26px);
+}
+
+/* mini system button */
+.theme-mini {
+  position: absolute;
+  top: 70px;
+  right: 14px;
+}
+
+.theme-mini button {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(0,0,0,0.2);
+  color: white;
+}
+
+
+/* KHUNG APP */
+.app-frame {
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+
+  position: relative;
+  overflow: hidden;
+
+  box-shadow: 0 0 50px rgba(0,0,0,0.3);
+}
+
+
+.header {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 50;
+}
+
+.theme-btn {
+  border: none;
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  background: rgba(0,0,0,0.35);
+  color: white;
+
+  backdrop-filter: blur(12px);
+}
+
+/* ===== HERO ===== */
+.hero {
+  position: relative;
+  height: 65vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.hero-bg {
+  width: 100%;
+  height: 110%;
+  object-fit: cover; 
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.55),
+    rgba(0,0,0,0.1),
+    transparent
+  );
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to bottom,
+    transparent 35%,
+    rgba(0,0,0,0.55)
+  );
+}
+
+.hero-content {
+  position: absolute;
+  top: 20px;
+  width: 100%;
+  display: flex;               
+  flex-direction: column;       
+  align-items: center;        
+  justify-content: center;
+
+  text-align: center;
+}
+
+.logo {
+  width: 50%;
+  margin-top: 20px;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+.subtitle {
+  display: inline-block;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  color: #111;
+
+  padding: 6px 12px;
+  margin-top: 8px;
+
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(10px);
+
+  border: 1px solid rgba(255,255,255,0.6);
+
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+/* ===== SHEET ===== */
+.sheet {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+
+  width: 100%;
+  min-height: 40vh;
+
+  padding: 18px;
+
+  box-sizing: border-box; 
+
+  background: var(--sheet-bg);
+
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+
+  border-top: 1px solid rgba(0,0,0,0.08);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ===== STATUS (GAME CONTEXT) ===== */
+.status {
+  text-align: center;
+
+  padding: 8px 10px; /* 🔥 giảm tiếp */
+  border-radius: 10px;
+
+  background: rgba(0,0,0,0.025);
+  border: 1px solid rgba(0,0,0,0.05);
+
+  /* 🔥 FIX khoảng cách dọc triệt để */
+  display: flex;
+  flex-direction: column;
+  gap: 2px; /* 🔥 quan trọng */
+}
+
+.dark .status {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ===== TITLE ===== */
+.status-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+/* ===== STAGE ===== */
+.status-stage {
+  font-size: 12px;
+  margin: 0; /* 🔥 bỏ margin-top */
+
+  color: rgba(0,0,0,0.65);
+
+  line-height: 1.25;
+
+  /* fix text dài */
+  word-break: break-word;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dark .status-stage {
+  color: rgba(255,255,255,0.65);
+}
+
+/* ===== FEELING ===== */
+.status-feeling {
+  margin: 0; /* 🔥 bỏ margin-top luôn */
+
+  font-size: 11px;
+  font-weight: 500;
+
+  display: inline-block;
+  align-self: center;
+
+  padding: 2px 7px;
+  border-radius: 999px;
+
+  background: rgba(0,0,0,0.05);
+
+  line-height: 1.2;
+}
+
+
+
+/* button thường */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+
+  gap: 10px;
+
+  padding: 16px 18px;
+
+  border-radius: 14px;
+
+  background: var(--btn-bg);
+  color: var(--btn-text);
+
+  border: 1px solid var(--btn-border); 
+
+  font-size: 15px;
+  font-weight: 500;
+
+  transition: all 0.2s ease;
+
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* icon */
+.btn .material-symbols-rounded {
+  font-size: 22px; 
+}
+
+/* hover (desktop) */
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+.btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* primary xanh lá */
+.primary {
+  background: linear-gradient(135deg, #34c759, #30b350);
+  color: white;
+  border: none;
+
+  font-weight: 600;
+
+  box-shadow: 0 6px 16px rgba(52,199,89,0.25);
+}
+
+.dark .primary {
+  background: linear-gradient(135deg, #30d158, #28a745);
+  color: white;
+}
+
+
+/* 🔥 QUAN TRỌNG: KHUNG APP GIỐNG iOS */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(
+    circle at top,
+    rgba(34,197,94,0.15),
+    transparent 60%
+  );
+}
+
+/* khung điện thoại / ipad */
+.app-frame {
+  width: 100%;
+  max-width: 430px;  
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+
+  background: var(--bg);
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.25),
+    0 0 0 1px rgba(255,255,255,0.08);
+}
+
+
+
+/* desktop sẽ có viền mờ xung quanh */
+@media (min-width: 768px) {
+  .app-frame {
+    max-width: 520px;
+    height: 100vh;
+  }
+  .logo {
+      width: 30%;
+      top: 0;
+  }
+  .hero-bg {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+  }
+
 }

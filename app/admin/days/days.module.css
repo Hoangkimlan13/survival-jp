@@ -1,0 +1,814 @@
+/* ================= ROOT LAYOUT ================= */
+.wrapper {
+  display: grid;
+  grid-template-columns: 320px 320px 1fr 360px;
+  gap: 16px;
+
+  height: calc(100vh - 80px);
+}
+
+/* ================= COLUMN ================= */
+.col {
+  background: var(--sheet-bg);
+  border-radius: 16px;
+  padding: 14px;
+
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);      
+  overflow: hidden;
+}
+
+/* chỉ scroll 1 vùng */
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding-right: 6px;
+
+  /* smooth scrolling */
+  scroll-behavior: smooth;
+
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 100, 100, 0.25) transparent;
+}
+
+/* Chrome / Edge / Safari */
+.scrollArea::-webkit-scrollbar {
+  width: 6px;              /* 👈 nhỏ lại */
+}
+
+.scrollArea::-webkit-scrollbar-track {
+  background: transparent; /* 👈 nền trong suốt */
+}
+
+.scrollArea::-webkit-scrollbar-thumb {
+  background: rgba(100, 100, 100, 0.25); /* 👈 mảnh + nhẹ */
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+
+.scrollArea::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 100, 100, 0.45); /* hover rõ hơn */
+}
+
+.dark .scrollArea::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dark .scrollArea::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* header (title + button) */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-weight: 700;
+  font-size: 14px;
+
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* button trong header */
+.header button {
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--text);
+
+  font-size: 12px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* hover nhẹ */
+.header button:hover {
+  background: var(--primary);
+  color: white;
+  border-color: transparent;
+
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+}
+
+/* active click */
+.header button:active {
+  transform: scale(0.96);
+}
+
+
+/* ================= LIST ITEM ================= */
+.item {
+  position: relative;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+  margin-top: 10px;
+
+  cursor: pointer;
+
+  font-size: 14px;
+  font-weight: 500;
+  gap: 10px;
+
+  transition: all 0.18s ease;
+
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.count {
+  min-width: 28px;
+
+  padding: 4px 8px;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(99,102,241,0.1);
+  color: var(--primary);
+
+  transition: all 0.2s ease;
+}
+
+.item:hover .count {
+  background: rgba(99,102,241,0.2);
+}
+.active .count {
+  background: rgba(255,255,255,0.2);
+  color: white;
+}
+
+.dark .count {
+  background: rgba(255,255,255,0.08);
+  color: #c7d2fe;
+}
+
+.dark .item:hover .count {
+  background: rgba(255,255,255,0.15);
+}
+
+/* ===== HOVER ===== */
+.item:hover {
+  background: rgba(99,102,241,0.08);
+
+  transform: translateX(4px);
+
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* dark mode hover */
+.dark .item:hover {
+  background: rgba(129,140,248,0.12);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+}
+
+
+
+
+/* ===== ACTIVE ===== */
+.active {
+  background: var(--primary);
+  color: white;
+
+  font-weight: 600;
+
+  box-shadow: 0 6px 18px rgba(99,102,241,0.35);
+
+  transform: translateX(6px);
+}
+
+/* ===== ACTIVE HOVER (giữ màu nhưng nổi hơn) ===== */
+.active:hover {
+  background: var(--primary-hover);
+  transform: translateX(8px);
+}
+
+/* ===== LEFT BAR (giống Notion / Linear) ===== */
+.item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+
+  width: 3px;
+  border-radius: 2px;
+
+  background: transparent;
+
+  transition: 0.2s;
+}
+
+/* hover -> hiện line */
+.item:hover::before {
+  background: var(--primary);
+  opacity: 0.4;
+}
+
+/* active -> line đậm */
+.active::before {
+  background: white;
+  opacity: 1;
+}
+
+
+/* title */
+.title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* right side */
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+/* status */
+.status {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+
+
+/* ================= BUTTON ================= */
+.btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+
+  background: var(--btn-bg);
+  color: var(--text);
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* primary button */
+/* ===== FORM ===== */
+.form {
+  background: var(--sheet-bg);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+}
+
+.form h4 {
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* ===== INPUT ===== */
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  transition: 0.2s;
+  background: var(--sheet-bg);
+  color: var(--text);
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #4f46e5;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79,70,229,0.15);
+}
+
+.textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+/* ===== SWITCH ===== */
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 15px;
+  font-size: 14px;
+}
+
+
+/* ===== ADD BUTTON ===== */
+.addChoiceBtn {
+  width: 100%;
+  padding: 10px;
+  background: #e0e7ff;
+  color: #3730a3;
+  border: none;
+  border-radius: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.addChoiceBtn:hover {
+  background: #c7d2fe;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btnPrimary {
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btnPrimary:hover {
+  background: #4338ca;
+}
+
+.btnDanger {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btnDanger:hover {
+  background: #dc2626;
+}
+
+/* ===== EDITOR ===== */
+.editor {
+  background: var(--sheet-bg);
+  border-radius: 16px;
+  padding: 20px;
+
+  border: 1px solid var(--border);
+
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px);      
+  overflow: hidden;
+  gap: 16px;
+}
+
+/* title */
+.editor h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* sub title */
+.editor h4 {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+
+/* ===== SWITCH ===== */
+.switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 15px;
+  font-size: 14px;
+}
+
+
+
+/* button base */
+.btn {
+  padding: 8px 14px;
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  border: 1px solid var(--border);
+  background: var(--btn-bg);
+  color: var(--text);
+}
+
+/* primary */
+.btnPrimary {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
+.btnPrimary:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* danger */
+.btnDanger {
+  background: var(--danger);
+  color: white;
+  border: none;
+}
+
+.btnDanger:hover {
+  background: var(--danger-hover);
+  transform: translateY(-1px);
+}
+
+
+.choiceSelect {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+/* focus đẹp */
+.choiceSelect:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* ===== MÀU THEO LEVEL ===== */
+
+/* PERFECT - xanh đậm */
+.choiceSelect.PERFECT {
+  background: #dcfce7;
+  border-color: #22c55e;
+  color: #15803d;
+}
+
+/* GOOD - xanh nhẹ */
+.choiceSelect.GOOD {
+  background: #dbeafe;
+  border-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+/* OK - vàng */
+.choiceSelect.OK {
+  background: #fef9c3;
+  border-color: #eab308;
+  color: #854d0e;
+}
+
+/* BAD - đỏ */
+.choiceSelect.BAD {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+/* ================= ENDING BOX ================= */
+.endingBox {
+  margin-top: 12px;
+  padding: 16px;
+
+  background: var(--sheet-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.endingBox h3 {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.endingBox p {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+/* ================= CARD (OPTIONAL USE) ================= */
+.card {
+  padding: 14px;
+  border-radius: 14px;
+
+  background: var(--card);
+  border: 1px solid var(--border);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  transition: all 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* ================= MODAL ================= */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 100;
+  backdrop-filter: blur(6px);
+}
+
+.modalBox {
+  width: 360px;
+  padding: 20px;
+
+  background: var(--sheet-bg);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  animation: pop 0.2s ease;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ================= TOAST ================= */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+
+  background: var(--primary);
+  color: white;
+
+  padding: 10px 14px;
+  border-radius: 10px;
+
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= DARK MODE ================= */
+.dark .item:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.dark .card:hover {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+.dark .modal {
+  background: rgba(0,0,0,0.65);
+}
+
+.dark .modalBox {
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+
+/* ===== CHOICE BOX (FINAL CLEAN) ===== */
+.choiceBox {
+  padding: 14px;
+  border-radius: 14px;
+
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  margin-bottom: 12px;
+
+  transition: all 0.2s ease;
+}
+
+.choiceBox:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+/* input */
+.choiceBox input {
+  width: 100%;
+  padding: 10px 12px;
+
+  border-radius: 10px;
+  border: 1px solid var(--border);
+
+  background: var(--sheet-bg);
+  color: var(--text);
+
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.choiceBox input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+/* ===== DELETE BUTTON ===== */
+.choiceBox button {
+  align-self: flex-end;
+
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+
+  border: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.choiceBox button:hover {
+  background: rgba(239, 68, 68, 0.2);
+  transform: translateY(-1px);
+}
+
+.good {
+  border-color: #22c55e !important;
+  background: rgba(34, 197, 94, 0.08);
+  color: #15803d;
+}
+
+.ok {
+  border-color: #eab308 !important;
+  background: rgba(234, 179, 8, 0.08);
+  color: #a16207;
+}
+
+.neutral {
+  border-color: #9ca3af !important;
+  background: rgba(156, 163, 175, 0.08);
+  color: #424a55;
+}
+
+.risky {
+  border-color: #f97316 !important;
+  background: rgba(249, 115, 22, 0.10);
+  color: #c2410c;
+}
+
+.bad {
+  border-color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.10);
+  color: #b91c1c;
+}
+
+/* ===== ADD CHOICE BUTTON (FINAL) ===== */
+.addChoiceBtn {
+  margin-top: 8px;
+  padding: 12px;
+
+  border-radius: 14px;
+  border: 1px dashed var(--border);
+
+  background: transparent;
+  color: var(--primary);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  transition: all 0.2s ease;
+}
+
+.addChoiceBtn::before {
+  content: "+";
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.addChoiceBtn:hover {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.addChoiceBtn:active {
+  transform: scale(0.97);
+}
+
+
+
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 1200px) {
+  .wrapper {
+    grid-template-columns: 220px 220px 1fr;
+  }
+
+  .endingBox {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .wrapper {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .col {
+    height: 450px;
+  }
+  .editor {
+    height: 450px;      
+  }
+}
