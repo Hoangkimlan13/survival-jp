@@ -256,116 +256,110 @@
   border: 1px solid rgba(255,255,255,0.08);
   box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 
-  margin-bottom: 16px;
-  margin-top: 16px;
+  margin: 16px 0;
 }
 
-/* dòng question + loa */
+/* text area */
 .questionRow {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 30px; /* chừa chỗ cho nút loa */
 }
 
-.questionRow .speakerBtn {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-}
-
-
-/* text nhật */
+/* chữ Nhật */
 .jpText {
-  flex: 1;
   font-size: 22px;
   font-weight: 600;
   line-height: 1.8;
+  padding-right: 40px; /* tránh đè icon */
 }
 
-/* translate */
-.translateBtn {
-  margin-top: 10px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.2);
-  padding: 6px 10px;
-  border-radius: 10px;
-  font-size: 12px;
-  color: var(--text, #fff);
-  cursor: pointer;
-}
-
-.translation {
-  width: 90%;
-  font-size: 14px;
-  opacity: 0.8;
-  animation: fadeIn 0.2s ease;
-}
-
-/* ================= SPEAKER ================= */
-.speakerBtn {
-  position: relative;
-
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-
-  border-radius: 12px;
-  padding: 10px 12px;
-
-  color: var(--text, #fff);
-  cursor: pointer;
+/* 🔥 SPEAKER FIX POSITION */
+.speakBtn {
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--text);
 
   display: flex;
+  align-items: center;
   justify-content: center;
-  transition: 0.2s;
-  overflow: hidden;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* hiệu ứng ripple nhẹ */
-.speakerBtn::after {
-  content: "";
+/* hover */
+.speakBtn:hover {
+  transform: scale(1.08);
+}
+
+.speakCard {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
+.speakSmall {
+  position: relative;
+
+  width: 42px;
+  height: 42px;
+
+  margin-left: 8px;
+
+  border-radius: 50%;
+}
+
+/* ACTIVE */
+.playing {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+  box-shadow: 0 0 0 6px rgba(34,197,94,0.15);
+}
+
+/* wave  */
+.audioWave {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, rgba(0,200,83,0.25), transparent 70%);
-  opacity: 0;
-  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  pointer-events: none;
 }
 
-.speakerBtn:active::after {
-  opacity: 1;
-}
-
-/* đang phát */
-.speaking {
-  background: rgba(0, 200, 83, 0.12);
-  border: 1px solid rgba(0, 200, 83, 0.4);
-
-  box-shadow: 0 0 12px rgba(0,200,83,0.25);
-}
-
-/* animation waveform */
-.speaking span {
-  animation: wave 0.6s infinite ease-in-out;
+.audioWave i {
+  width: 2px;
+  height: 10px;
+  background: white;
+  border-radius: 2px;
+  animation: wave 0.9s infinite ease-in-out;
 }
 
 @keyframes wave {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.25); }
-  100% { transform: scale(1); }
+  0%, 100% { transform: scaleY(0.4); opacity: 0.5; }
+  50% { transform: scaleY(1.6); opacity: 1; }
 }
-/* ================= WHEN SPEAKING ================= */
 
-/* animation glow */
-@keyframes pulseGlow {
-  0% {
-    box-shadow: 0 0 0 rgba(0,200,83,0.4);
-    transform: scale(1);
+/* delay tạo nhịp tim */
+.audioWave i:nth-child(1) { animation-delay: 0s; }
+.audioWave i:nth-child(2) { animation-delay: 0.1s; }
+.audioWave i:nth-child(3) { animation-delay: 0.2s; }
+.audioWave i:nth-child(4) { animation-delay: 0.3s; }
+.audioWave i:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(0.4);
+    opacity: 0.5;
   }
   50% {
-    box-shadow: 0 0 12px rgba(0,200,83,0.7);
-    transform: scale(1.08);
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(0,200,83,0.4);
-    transform: scale(1);
+    transform: scaleY(1.6);
+    opacity: 1;
   }
 }
 

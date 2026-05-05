@@ -1,0 +1,562 @@
+/* ===== ROOT ===== */
+.profile {
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ===== HEADER ===== */
+.profileHeader {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 14px 16px;
+
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+
+  border-bottom: 1px solid var(--border);
+}
+
+.dark .profileHeader {
+  background: rgba(19, 28, 47, 0.65);
+  backdrop-filter: blur(16px);
+}
+
+/* ===== BACK BUTTON ===== */
+.backBtn {
+  width: 40px;
+  height: 40px;
+
+  border-radius: 12px;
+  border: 1px solid var(--border);
+
+  background: var(--surface);
+  color: var(--text);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.backBtn:hover {
+  transform: scale(1.05);
+  background: var(--surface-strong);
+}
+
+/* ===== CENTER INFO ===== */
+.headerInfo {
+  flex: 1;
+  text-align: center;
+}
+
+.headerInfo h1 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.2px;
+}
+
+.headerInfo p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.dot {
+  opacity: 0.4;
+}
+
+/* ===== ICONS SMALL ===== */
+.material-icons.tiny {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* ===== XP BADGE ===== */
+.xpBadge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  background: linear-gradient(135deg, var(--primary), var(--info));
+  color: white;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+}
+
+.xpBadge .star {
+  font-size: 16px;
+}
+
+/* ===== MAP ===== */
+.mapWrapper {
+  isolation: isolate;
+  position: relative;
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99,102,241,0.4) transparent;
+
+  /* 🔥 smooth scrolling */
+  scroll-behavior: smooth;
+
+  /* 🔥 match background */
+  background: var(--bg);
+}
+
+/* ===== SCROLLBAR (CHROME / EDGE / SAFARI) ===== */
+.mapWrapper::-webkit-scrollbar {
+  width: 10px;
+}
+
+.mapWrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mapWrapper::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.25);
+  border-radius: 999px;
+
+  border: 2px solid transparent;
+  background-clip: padding-box;
+
+  transition: 0.2s;
+}
+
+.mapWrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* ===== DARK MODE ===== */
+.dark .mapWrapper::-webkit-scrollbar-thumb {
+  background: rgba(139, 129, 255, 0.35);
+}
+
+.dark .mapWrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 129, 255, 0.6);
+}
+
+
+/* ===== PATH ===== */
+.mapPath {
+  position: absolute;
+  width: 100%;
+  height: 6000px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.mapPath path {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 5;
+  stroke-linecap: round;
+
+  filter:
+    drop-shadow(0 0 6px var(--primary))
+    drop-shadow(0 0 14px var(--primary));
+
+  stroke-dasharray: 10 10;
+  animation: flow 10s linear infinite;
+}
+
+@keyframes flow {
+  to {
+    stroke-dashoffset: -200;
+  }
+}
+
+
+/* ===== DAY SECTION ===== */
+.dayDivider {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  z-index: 5;
+
+  width: 80%;
+  max-width: 420px;
+}
+
+/* ===== LINE ===== */
+.dayDivider .line {
+  flex: 1;
+  height: 1px;
+
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(99,102,241,0.6),
+    transparent
+  );
+
+  opacity: 0.7;
+}
+
+/* ===== TEXT ===== */
+.dayText {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+
+  color: var(--primary);
+
+  background: rgba(99,102,241,0.08);
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  backdrop-filter: blur(10px);
+
+  white-space: nowrap;
+}
+
+/* DARK MODE */
+.dark .dayText {
+  background: rgba(139,129,255,0.12);
+}
+
+
+/* ===== NODE ===== */
+
+.node {
+  position: absolute;
+  left: 0;
+  top: 0;
+
+  transform: translate(-50%, -50%);
+
+  width: auto;
+  height: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+/* ===== ICON ===== */
+.node .icon {
+  width: 72px;
+  height: 72px;
+
+  border-radius: 50%;
+  aspect-ratio: 1 / 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;
+  z-index: 3;
+
+  background: linear-gradient(
+    135deg,
+    #58cc02 0%,
+    #46a302 50%,
+    #3c8f01 100%
+  );
+
+  box-shadow:
+    0 0 0 6px rgba(88, 204, 2, 0.12),   /* outer glow ring */
+    0 0 0 14px rgba(88, 204, 2, 0.05),  /* soft aura */
+    0 12px 30px rgba(0, 0, 0, 0.25);
+
+  border: 3px solid rgba(255, 255, 255, 0.25);
+}
+
+/* ===== STATES ===== */
+.node.current .icon {
+  transform: scale(1.1);
+}
+
+
+.node.passed .icon {
+  pointer-events: none;
+  cursor: not-allowed;
+
+  /* 👇 giảm độ nổi nhưng vẫn giữ màu "đã hoàn thành" */
+  opacity: 0.55;
+  filter: grayscale(0.4) saturate(0.8);
+
+  background: linear-gradient(
+    135deg,
+    #58cc02 0%,
+    #46a302 50%,
+    #2f7a01 100%
+  );
+
+  border-color: rgba(88, 204, 2, 0.6);
+
+  /* 👇 tạo cảm giác "đã khóa nhẹ" */
+  box-shadow:
+    0 0 0 4px rgba(88, 204, 2, 0.12),
+    0 10px 20px rgba(0, 0, 0, 0.25);
+
+  transform: scale(0.92);
+
+  transition: all 0.25s ease;
+}
+
+
+.node.locked .icon {
+  background: #2b2f3a;
+  box-shadow:
+    0 0 0 6px rgba(0,0,0,0.2);
+
+  opacity: 0.5;
+  filter: grayscale(1);
+}
+
+/* ===== DAY ===== */
+.node.day .icon {
+  width: 80px;
+  height: 80px;
+  font-size: 30px;
+
+  background: linear-gradient(135deg, var(--info), var(--primary));
+  color: white;
+}
+.node.stage.small .icon {
+  width: 50px;
+  height: 50px;
+  color: white;
+}
+
+.node.stage.big .icon {
+  width: 64px;
+  height: 64px;
+}
+/* ===== LABEL ===== */
+.node.day .label {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+
+/* ===== DAY GROUP VISUAL ===== */
+/* ===== DAY GROUP BACKGROUND ===== */
+.node.day::after {
+  content: "";
+  position: absolute;
+
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 260px;
+  height: 260px;
+
+  background: radial-gradient(
+    circle,
+    rgba(99,102,241,0.18),
+    transparent 70%
+  );
+
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.dark .node.day::after {
+  background: radial-gradient(
+    circle,
+    rgba(139,129,255,0.22),
+    transparent 70%
+  );
+}
+
+.currentPointer {
+  position: absolute;
+  top: -28px;
+  left: 50%;
+
+  transform: translateX(-50%) scale(1.4); 
+
+  font-size: 34px;
+  color: #58cc02;
+
+  animation: bounceArrow 0.9s ease-in-out infinite;
+
+  filter:
+    drop-shadow(0 0 10px rgba(88,204,2,0.8))
+    drop-shadow(0 0 20px rgba(88,204,2,0.4));
+}
+
+.currentPointer::after {
+  content: "";
+  position: absolute;
+
+  left: 50%;
+  top: 18px;
+
+  width: 2px;
+  height: 18px;
+
+  transform: translateX(-50%);
+
+  background: linear-gradient(
+    to bottom,
+    rgba(88,204,2,0.8),
+    transparent
+  );
+
+  opacity: 0.6;
+}
+
+@keyframes bounceArrow {
+  0% {
+    transform: translateX(-50%) translateY(0) scale(1.4);
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(-6px) scale(1.4);
+  }
+
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1.4);
+  }
+}
+
+/* ===== STAGE LABEL ===== */
+.stageLabel {
+  position: absolute;
+
+  top: 50%;
+  transform: translateY(-50%);
+
+  font-size: 12px;
+  font-weight: 500;
+
+  width: 120px;             
+  max-width: 120px;
+
+  line-height: 1.3;
+
+  white-space: normal;
+  word-break: normal;       
+  overflow-wrap: break-word;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  opacity: 0.95;
+}
+
+
+.mapPath path {
+  stroke: #6366f1;
+  stroke-width: 6;
+  stroke-linecap: round;
+
+  stroke-dasharray: 12 14;
+  animation: flow 6s linear infinite;
+
+  opacity: 0.9;
+  filter: drop-shadow(0 0 10px rgba(99,102,241,0.6));
+}
+
+
+/* bên trái icon */
+.node.left .stageLabel,
+.node.forceLeft .stageLabel {
+  right: 70px;
+  text-align: right;
+}
+
+/* bên phải icon */
+.node.right .stageLabel,
+.node.forceRight .stageLabel {
+  left: 70px;
+  text-align: left;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes pulse {
+  0% { transform: scale(1) }
+  50% { transform: scale(1.25) }
+  100% { transform: scale(1) }
+}
+
+/* ===== SIZE ===== */
+.node.small .icon {
+  width: 54px;
+  height: 54px;
+}
+
+.node.big .icon {
+  width: 70px;
+  height: 70px;
+  border: 3px solid white;
+  box-shadow:
+    0 0 15px var(--primary),
+    0 0 40px rgba(99,102,241,0.5);
+}
+
+/* hiệu ứng checkpoint */
+.node.big.current .icon {
+  animation: pulseBig 1.2s infinite;
+}
+
+@keyframes pulseBig {
+  0% { transform: scale(1) }
+  50% { transform: scale(1.35) }
+  100% { transform: scale(1) }
+}
+
+
+
+.loading {
+  animation: fadeIn 0.4s ease;
+}
+
+.loading::after {
+  content: "Đang khởi tạo thế giới sinh tồn...";
+  margin-top: 10px;
+  font-size: 13px;
+  opacity: 0.7;
+
+  animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

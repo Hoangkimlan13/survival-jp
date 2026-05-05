@@ -1,8 +1,8 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
-import { getProgress } from "@/lib/progress"
+import { useEffect, useRef, useState } from "react"
+import { getProgress, type ProgressLog } from "@/lib/progress"
 
 type ThemeMode = "system" | "dark" | "light"
 
@@ -13,25 +13,159 @@ export default function HomePage() {
   const [theme, setTheme] = useState<ThemeMode>("system")
   const [dark, setDark] = useState(false)
 
-  const [progress, setProgressState] = useState<any>(null)
+  const [progress, setProgressState] = useState<any>(undefined)
 
   const [days, setDays] = useState<any[]>([])
   const [stages, setStages] = useState<any[]>([])
 
+  const [expanded, setExpanded] = useState(false)
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768
+  const isTouchDevice =
+    typeof window !== "undefined" &&
+    ("ontouchstart" in window || navigator.maxTouchPoints > 0)
+
+  const [showHint, setShowHint] = useState(true)
+  const sheetRef = useRef<HTMLDivElement | null>(null)
+  
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging.current || !sheetRef.current) return
+
+    const el = sheetRef.current
+
+    const isAtTop = el.scrollTop <= 0
+    const isAtBottom =
+      el.scrollHeight - el.scrollTop <= el.clientHeight + 1
+
+    const y = e.touches[0].clientY
+    const delta = startY.current - y
+
+    if (
+      (delta > 0 && isAtTop) ||
+      (delta < 0 && isAtBottom)
+    ) {
+      // ❌ KHÔNG preventDefault ở đây nữa
+      moveDrag(y)
+    }
+  }
+
+  const handleNavigate = (path: string) => (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation() // 🔥 ngăn sheet nhận event
+    isDragging.current = false // 🔥 cancel drag ngay lập tức
+
+    router.push(path)
+  }
+
+  const isInteractiveElement = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false
+    return target.closest("button, a")
+  }
+
+
+  useEffect(() => {
+    const seen = localStorage.getItem("sheet_hint_done")
+    if (seen) setShowHint(false)
+  }, [])
+
+  const handleInteract = () => {
+    setShowHint(false)
+    localStorage.setItem("sheet_hint_done", "1")
+  }
+  
+  const isDragging = useRef(false)
+  const startY = useRef(0)
+  const currentY = useRef(0)
+  
+
+  const startDrag = (y: number) => {
+    isDragging.current = true
+    startY.current = y
+  }
+
+  const moveDrag = (y: number) => {
+    if (!isDragging.current) return
+
+    currentY.current = y 
+
+    const delta = startY.current - y
+
+    document.documentElement.style.setProperty(
+      "--sheet-offset",
+      `${Math.max(0, delta)}px`
+    )
+  }
+
+  const endDrag = () => {
+    if (!isDragging.current) return
+    isDragging.current = false
+
+    const delta = startY.current - currentY.current
+
+    document.documentElement.style.setProperty("--sheet-offset", "0px") 
+
+    if (delta > 50) setExpanded(true)
+    else if (delta < -50) setExpanded(false)
+  }
+
+  useEffect(() => {
+    if (!isTouchDevice) {
+      setExpanded(true) 
+    }
+  }, [isTouchDevice])
+
+
+  useEffect(() => {
+    const el = sheetRef.current
+    if (!el) return
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!isDragging.current) return
+
+      const isAtTop = el.scrollTop <= 0
+      const isAtBottom =
+        el.scrollHeight - el.scrollTop <= el.clientHeight + 1
+
+      const y = e.touches[0].clientY
+      const delta = startY.current - y
+
+      if (
+        (delta > 0 && isAtTop) ||
+        (delta < 0 && isAtBottom)
+      ) {
+        e.preventDefault() // ✅ GIỜ mới hợp lệ
+      }
+    }
+
+    el.addEventListener("touchmove", onTouchMove, {
+      passive: false, // 🔥 bắt buộc
+    })
+
+    return () => {
+      el.removeEventListener("touchmove", onTouchMove)
+    }
+  }, [])
+
+  
   // ===== LOAD PROGRESS =====
   useEffect(() => {
-    const p = getProgress()
-
-    if (!p) {
-      const defaultProgress = {
-        dayId: 1,
-        stageId: 1,
-        turn: 1
-      }
-
-      setProgressState(defaultProgress)
-    } else {
+    const load = () => {
+      const p = getProgress()
       setProgressState(p)
+    }
+
+    load()
+
+    const onFocus = () => load()
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "progress") load()
+    }
+
+    window.addEventListener("focus", onFocus)
+    window.addEventListener("storage", onStorage)
+
+    return () => {
+      window.removeEventListener("focus", onFocus)
+      window.removeEventListener("storage", onStorage)
     }
   }, [])
 
@@ -43,9 +177,9 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    if (!progress?.dayId) return
+    const dayId = progress?.dayId ?? 1
 
-    fetch(`/api/stages?dayId=${progress.dayId}`)
+    fetch(`/api/stages?dayId=${dayId}`)
       .then(res => res.json())
       .then(setStages)
   }, [progress?.dayId])
@@ -68,6 +202,25 @@ export default function HomePage() {
     document.documentElement.classList.toggle("dark", isDark)
   }, [])
 
+   // ===== Mở âm thanh =====
+   const [sound, setSound] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem("sound")
+    setSound(saved === "on")
+  }, [])
+
+  useEffect(() => {
+    const unlock = () => {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+      ctx.resume()
+    }
+
+    window.addEventListener("click", unlock, { once: true })
+
+    return () => window.removeEventListener("click", unlock)
+  }, [])
+
   // ===== APPLY THEME =====
   const applyTheme = (mode: ThemeMode) => {
     const systemDark = window.matchMedia(
@@ -86,24 +239,157 @@ export default function HomePage() {
     document.documentElement.classList.toggle("dark", isDark)
     localStorage.setItem("theme", mode)
   }
+  
 
 
   const getSurvivalStatus = (progress: any) => {
-    if (!progress) return "Bắt đầu hành trình..."
+    const hp = Number(progress?.hp ?? 5)
+    const streak = Number(progress?.streak ?? 0)
+    const day = Number(progress?.dayId ?? 1)
+    const stage = Number(progress?.stageId ?? 1)
+    const history: ProgressLog[] = Array.isArray(progress?.history) ? progress.history : []
 
-    const hp = progress.hp ?? 5
-    const streak = progress.streak ?? 0
+    // ===== CALCULATE DAY-WIDE PERFORMANCE =====
+    const calculateDayPerformance = () => {
+      if (history.length === 0) return { accuracy: 0, perfectCount: 0, badCount: 0, totalAnswered: 0 }
 
-    if (hp <= 1) return "Bạn đang sắp toang..."
-    if (hp <= 2) return "Tình hình không ổn..."
-    if (streak >= 5) return "Bạn đang rất tự tin"
-    if (streak >= 3) return "Mọi thứ đang ổn"
+      const perfectCount = history.filter(h => h.result === "PERFECT").length
+      const goodCount = history.filter(h => h.result === "GOOD").length
+      const okCount = history.filter(h => h.result === "OK").length
+      const badCount = history.filter(h => h.result === "BAD").length
+      const totalAnswered = history.length
 
-    return "Hãy bắt đầu hành trình nào!!! "
+      // Score: PERFECT=100, GOOD=75, OK=50, BAD=0
+      const totalScore = perfectCount * 100 + goodCount * 75 + okCount * 50
+      const accuracy = totalScore / (totalAnswered * 100)
+
+      return { accuracy, perfectCount, badCount, totalAnswered }
+    }
+
+    const dayPerf = calculateDayPerformance()
+    const hasHistory = history.length > 0
+
+    const pick = (messages: string[]) => {
+      const seed = day * 13 + stage * 7 + hp * 5 + streak * 11 + (dayPerf.accuracy * 3 || 0)
+      return messages[seed % messages.length]
+    }
+
+    // NO PROGRESS: First time or just reset
+    if (!progress) {
+      return pick([
+        "Hành trình bắt đầu! 🎌",
+        "Sắp sàng để sống sót?",
+        "Ngày đầu chờ rồi..."
+      ])
+    }
+
+    // NEW DAY: Progress exists but no answers yet in current stage/day
+    if (!hasHistory) {
+      return pick([
+        `Ngày ${day} bắt đầu! HP: ${hp}/5 💚`,
+        `Chuỗi sống sót: ${streak} | Sẵn sàng chưa?`,
+        `Vào trận ngày ${day}!`
+      ])
+    }
+
+    // CRITICAL SITUATION: Low HP + many bad answers = extreme danger
+    if (hp <= 1 && dayPerf.badCount >= 3) {
+      return pick([
+        `💀 Ngày ${day} CẤP BÁO! Sai lầm quá nhiều!`,
+        `Máu chỉ còn 1... một nước nữa là game over!`,
+        `Tuyệt vọng! Phải làm gì cứu được?`
+      ])
+    }
+
+    if (hp <= 1) {
+      return pick([
+        `⚠️ Máu 1/5! Cảnh báo đỏ!`,
+        `Sức mạnh cạn kiệt... mỗi quyết định đều quan trọng!`,
+        `Đứng bờ vực rồi!`
+      ])
+    }
+
+    // WARNING: Low HP + bad day performance
+    if (hp <= 2 && dayPerf.accuracy < 0.5) {
+      return pick([
+        `🔥 Ngày ${day}: HP yếu + sai lầm tích lũy!`,
+        `Máu thấp, hiệu suất tệ... nguy hiểm!`,
+        `Cải thiện ngay không kìm được nữa!`
+      ])
+    }
+
+    if (hp <= 2) {
+      return pick([
+        `⚡ Máu ${hp}/5, cẩn thận từng bước!`,
+        `Sức khỏe yếu... chọn khôn ngoan!`,
+        `Một sai lầm = game over!`
+      ])
+    }
+
+    // EXCELLENT PERFORMANCE: High accuracy + good HP
+    if (dayPerf.accuracy >= 0.8 && hp >= 4) {
+      return pick([
+        `✨ ${dayPerf.perfectCount} câu hoàn hảo! Phong độ đỉnh!`,
+        `Đang làm chủ cuộc chơi! 👑`,
+        `Bậc thầy sinh tồn!`
+      ])
+    }
+
+    // VERY GOOD: Strong accuracy with current streak
+    if (streak >= 5 && dayPerf.accuracy >= 0.6) {
+      return pick([
+        `🔥 Chuỗi ${streak}! Quá hay! `,
+        `Vừa mạnh vừa thông minh!`,
+        `Đang trên đà rồi!`
+      ])
+    }
+
+    if (streak >= 5) {
+      return pick([
+        `💪 Chuỗi ${streak} lần sống sót!`,
+        `Phong độ tốt, giữ nhịp!`,
+        `Đắc nhân tâm!`
+      ])
+    }
+
+    // MODERATE: Acceptable but needs improvement
+    if (streak >= 3 && dayPerf.accuracy >= 0.5) {
+      return pick([
+        `👍 Ổn đấy, nhưng đừng chủ quan!`,
+        `Đang đi đúng hướng, cố lên!`,
+        `Sống sót được rồi, tiếp tục!`
+      ])
+    }
+
+    // STRUGGLING: Low accuracy
+    if (dayPerf.accuracy < 0.4) {
+      return pick([
+        `😅 Hôm nay không được tốt... phải cải thiện!`,
+        `Sai lầm quá nhiều rồi!`,
+        `Khó khăn nhưng vẫn có cơ hội!`
+      ])
+    }
+
+    // DEFAULT: Regular day
+    return pick([
+      `Ngày ${day}, mỗi chọn lựa quyết định bạn!`,
+      `Chiến thôi! 🎮`,
+      `Tập trung tối đa!`
+    ])
   }
 
 
   // ===== FIND CURRENT  =====
+  const hasSavedGame = Boolean(
+    progress && (
+      (Array.isArray(progress.history) && progress.history.length > 0) ||
+      progress.turn > 1 ||
+      progress.dayId > 1 ||
+      progress.stageId > 1 ||
+      Number(progress.hp ?? 5) !== 5
+    )
+  )
+
   const currentDay =
     days.find(d => d.id === progress?.dayId) || days[0]
 
@@ -115,18 +401,33 @@ export default function HomePage() {
 
       {/* HEADER */}
       <div className="header">
+        <div className="controlGroup">
 
-        {/* iOS STYLE SWITCH */}
-        <div className={`track ${dark ? "on" : ""}`}
-          onClick={() =>
-            applyTheme(dark ? "light" : "dark")
-          }
-        >
-          <div className="thumb">
-            {dark ? "🌙" : "☀️"}
-          </div>
+          {/* SOUND */}
+          <button
+            className={`iconBtn ${sound ? "active" : ""}`}
+            onClick={() => {
+              const newVal = !sound
+              setSound(newVal)
+              localStorage.setItem("sound", newVal ? "on" : "off")
+            }}
+          >
+            <span className="material-symbols-rounded">
+              {sound ? "volume_up" : "volume_off"}
+            </span>
+          </button>
+
+          {/* THEME */}
+          <button
+            className="iconBtn"
+            onClick={() => applyTheme(dark ? "light" : "dark")}
+          >
+            <span className="material-symbols-rounded">
+              {dark ? "dark_mode" : "light_mode"}
+            </span>
+          </button>
+
         </div>
-
       </div>
 
       {/* SYSTEM BUTTON (optional nâng cao UX) */}
@@ -136,9 +437,10 @@ export default function HomePage() {
         </button>
       </div>
 
+
       {/* HERO */}
       <div className="hero">
-        <img src="/bg.jpg" className="hero-bg" />
+        <div className="hero-overlay" />
 
         <div className="hero-content">
           <img src="/logo.png" className="logo" />
@@ -150,16 +452,50 @@ export default function HomePage() {
       </div>
 
       {/* SHEET */}
-      <div className="sheet">
+
+      <div
+        className={`sheet ${expanded ? "expanded" : "collapsed"}`}
+        ref={sheetRef}
+        {...(isTouchDevice && {
+          onTouchStart: (e) => {
+            if (isInteractiveElement(e.target)) return 
+            startDrag(e.touches[0].clientY)
+          },
+          onTouchMove: (e) => handleTouchMove(e),
+          onTouchEnd: endDrag,
+        })}
+      >
+        {/* HANDLE */}
+        <div
+          className={`dragHandle ${!showHint ? "noHint" : ""}`}
+          onClick={() => {
+            handleInteract()
+            setExpanded(!expanded)
+          }}
+        >
+          <div className="handle-bar" />
+
+          <span className="material-symbols-outlined arrow">
+            {expanded ? "expand_more" : "expand_less"}
+          </span>
+        </div>
 
         {/* STATUS */}
         <div className="status">
-          <p className="status-title">
-            Ngày {currentDay?.order ?? 1}: {currentDay?.name ?? "Loading..."}
-          </p>
+          <div className="status-head">
+            <div>
+              <p className="status-subtitle">Hành trình hiện tại</p>
+              <p className="status-title">
+                Ngày {currentDay?.order ?? 1}: {currentDay?.name ?? "Loading..."}
+              </p>
+            </div>
+            <span className="status-chip">
+              Màn {currentStage?.order ?? 1}
+            </span>
+          </div>
 
           <p className="status-stage">
-            Màn {currentStage?.order ?? 1} • {currentStage?.name ?? "Loading..."}
+            {currentStage?.name ?? "Loading..."}
           </p>
 
           <p className="status-feeling">
@@ -167,38 +503,45 @@ export default function HomePage() {
           </p>
         </div>
 
+
         {/* PRIMARY */}
         <button
           className="btn primary"
-          onClick={() => router.push("/game")}
+          onClick={handleNavigate("/game")}
         >
           <span className="material-symbols-rounded">
-            {progress ? "play_circle" : "rocket_launch"}
+            {hasSavedGame ? "play_circle" : "rocket_launch"}
           </span>
 
-          {progress ? "Tiếp tục" : "Bắt đầu"}
+          {hasSavedGame ? "Tiếp tục" : "Bắt đầu"}
         </button>
 
-        {/* SECONDARY */}
-        <button className="btn">
-          <span className="material-symbols-rounded">emoji_events</span>
-          Thành tích
-        </button>
-
-        <button className="btn">
-          <span className="material-symbols-rounded">lightbulb</span>
-          Gửi tình huống thật
-        </button>
-
+        {/* SURVIVAL PROFILE */}
         <button
-          className="btn danger"
-          onClick={() => {
-            localStorage.removeItem("progress")
-            location.reload()
-          }}
+          className="btn"
+          onClick={handleNavigate("/profile")}
         >
-          Reset Game
+          <span className="material-symbols-rounded">badge</span>
+          Hồ sơ sinh tồn
         </button>
+
+        <div className="extraActions">
+          <button className="btn">
+            <span className="material-symbols-rounded">lightbulb</span>
+            Gửi tình huống thật
+          </button>
+
+          <button
+            className="btn danger"
+            onClick={() => {
+              localStorage.removeItem("progress")
+              localStorage.removeItem("game_event") 
+              location.reload()
+            }}
+          >
+            Reset Game
+          </button>
+        </div>
 
       </div>
     </div>

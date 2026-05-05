@@ -5,17 +5,32 @@ export const metadata = {
   description: "Game sinh tồn tại Nhật"
 }
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover"
+}
+
 export default function RootLayout({ children }: any) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
-        {/* ===== ICON FONT ===== */}
+        {/* ICON FONT */}
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
           rel="stylesheet"
         />
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet"
+        />
 
-        {/* ===== GOOGLE FONTS (JP + VN + UI) ===== */}
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+          rel="stylesheet"
+        />
+
+        {/* GOOGLE FONTS */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
 
@@ -24,7 +39,7 @@ export default function RootLayout({ children }: any) {
           rel="stylesheet"
         />
 
-        {/* ===== DARK MODE GLOBAL ===== */}
+        {/* DARK MODE SCRIPT */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -39,11 +54,7 @@ export default function RootLayout({ children }: any) {
                   else if (saved === "light") isDark = false;
                   else isDark = systemDark;
 
-                  if (isDark) {
-                    document.documentElement.classList.add("dark");
-                  } else {
-                    document.documentElement.classList.remove("dark");
-                  }
+                  document.documentElement.classList.toggle("dark", isDark);
                 } catch(e) {}
               })();
             `
