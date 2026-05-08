@@ -1,11 +1,15 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { speak, stopSpeak } from "@/lib/tts"
+import { useEffect, useId, useRef, useState } from "react"
+import {
+  hasJapaneseSpeechText,
+  prepareSpeechSynthesis,
+  speak,
+  stopSpeak
+} from "@/lib/tts"
 import { playClick } from "@/src/game/sound"
 import styles from "@/styles/game.module.css"
 
-// Global state để track button đang active
 let activeButtonId: string | null = null
 
 export default function SpeakButton({
@@ -16,11 +20,13 @@ export default function SpeakButton({
   variant?: "small" | "card" | "inline"
 }) {
   const [playing, setPlaying] = useState(false)
-  const buttonIdRef = useRef(Math.random().toString(36))
-  const abortControllerRef = useRef<AbortController | null>(null)
-  const hasJapanese = /[\u3040-\u30ff\u4e00-\u9faf]/.test(text)
+  const reactId = useId()
+  const buttonIdRef = useRef(reactId)
+  const hasJapanese = hasJapaneseSpeechText(text)
 
   useEffect(() => {
+    prepareSpeechSynthesis()
+
     const handleStop = (event: CustomEvent) => {
       if (event.detail?.id === buttonIdRef.current) {
         setPlaying(false)
@@ -35,14 +41,16 @@ export default function SpeakButton({
   }, [])
 
   const handleSpeak = async () => {
+    if (!hasJapanese || playing) return
+
     const buttonId = buttonIdRef.current
 
-    if (playing) return
+    prepareSpeechSynthesis()
 
-    // Stop other button nếu có
     if (activeButtonId && activeButtonId !== buttonId) {
-      const event = new CustomEvent("speakStop", { detail: { id: activeButtonId } })
-      window.dispatchEvent(event)
+      window.dispatchEvent(
+        new CustomEvent("speakStop", { detail: { id: activeButtonId } })
+      )
       stopSpeak()
     }
 
@@ -60,8 +68,12 @@ export default function SpeakButton({
 
   return (
     <button
-      onClick={hasJapanese ? handleSpeak : undefined}
+      type="button"
+      onPointerDown={prepareSpeechSynthesis}
+      onClick={handleSpeak}
       disabled={!hasJapanese}
+      aria-label={hasJapanese ? "Phát âm tiếng Nhật" : "Không có tiếng Nhật để phát âm"}
+      title={hasJapanese ? "Phát âm tiếng Nhật" : "Câu này không có tiếng Nhật"}
       className={`
         ${styles.speakBtn}
         ${styles[variant === "card" ? "speakCard" : "speakSmall"]}
@@ -69,14 +81,12 @@ export default function SpeakButton({
         ${!hasJapanese ? styles.disabled : ""}
       `}
     >
-      {/* ICON biến mất khi speaking */}
       {!playing && (
         <span className="material-symbols-rounded">
-          volume_up
+          {hasJapanese ? "volume_up" : "volume_off"}
         </span>
       )}
 
-      {/* WAVE PRO */}
       {playing && (
         <span className={styles.audioWave}>
           <i /><i /><i /><i /><i />

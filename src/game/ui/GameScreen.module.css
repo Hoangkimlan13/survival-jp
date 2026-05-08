@@ -1,7 +1,22 @@
 /* ================= BASE ================= */
 .game {
-  padding: 16px;
-  max-width: 460px;
+  --hud-bg:
+    linear-gradient(
+      180deg,
+      rgba(16,18,24,0.92),
+      rgba(8,10,14,0.98)
+    );
+
+  --hud-border: rgba(255,255,255,0.08);
+
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #facc15;
+  --blue: #38bdf8;
+  --purple: #8b5cf6;
+
+  padding: 10px;
+  max-width: 480px;
   margin: 0 auto;
 
   height: 100dvh;   
@@ -104,22 +119,58 @@
     opacity: 1;
   }
 }
+
+
+
+.hudShell {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  padding: 12px;
+
+  border-radius: 24px;
+
+  background: var(--bg);
+
+  border: 1px solid var(--hud-border);
+
+  overflow: hidden;
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.25),
+    0 0 18px rgba(34,197,94,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+
+  flex-shrink: 0;
+}
+
+/* ambient glow */
+.hudShell::before {
+  content: "";
+
+  position: absolute;
+  inset: -20%;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(34,197,94,0.14),
+      transparent 30%
+    );
+
+  pointer-events: none;
+}
+
 /* ================= TOP BAR ================= */
 .topBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-
-  padding: 6px 10px; /* 🔥 giảm mạnh */
-  border-radius: 16px;
-
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(12px);
-
-  max-height: 64px;
-  
+  gap: 10px;
 }
+
 
 .dark .topBar {
   background: rgba(255, 255, 255, 0.04);
@@ -128,35 +179,70 @@
 }
 
 .homeBtn {
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  width: 42px;
+  height: 42px;
+
   border-radius: 14px;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
-.homeBtn:hover {
-  transform: translateY(-2px);
-  background: rgba(34, 197, 94, 0.08);
-  border-color: rgba(34, 197, 94, 0.25);
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.08),
+      rgba(255,255,255,0.03)
+    );
+
+  color: var(--text);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  transition:
+    transform .18s ease,
+    background .18s ease,
+    border-color .18s ease;
 }
 
+.homeBtn:active {
+  transform: scale(0.94);
+}
+
+.homeBtn span {
+  font-size: 18px;
+}
+
+
 .stageInfo {
+  flex: 1;
+
+  min-width: 0;
+
   display: flex;
   flex-direction: column;
-  gap: 2px; /* giảm từ 6px */
-  flex: 1;
+  justify-content: center;
+
+  gap: 3px;
 }
+
 
 .dayLabel {
   font-size: 10px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: 0.18px;
+  font-weight: 800;
+
   text-transform: uppercase;
+  letter-spacing: .16em;
+
+  color: var(--text);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 .dayLabel,
 .stageTitle,
 .stageSub {
@@ -167,17 +253,26 @@
 
 
 .stageTitle {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
+
   color: var(--text);
-  letter-spacing: 0.08em;
-  line-height: 1.2;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 
 .stageSub {
   font-size: 11px;
-  color: var(--text);
   font-weight: 600;
+
+  color: var(--text);
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dark .stageSub {
@@ -186,26 +281,152 @@
 
 .xp {
   display: flex;
+  flex-direction: column;
   justify-content: flex-end;
+  align-items: flex-end;
+  gap: 5px;
 }
 
-.xpBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+
+/* =========================
+   PLAYER STATS
+========================= */
+
+.playerMini {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+
+  flex-shrink: 0;
+}
+
+
+
+
+.levelBadge {
+  padding: 5px 10px;
+
   border-radius: 999px;
-  color: var(--text);
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  background:
+    linear-gradient(
+      135deg,
+      #8b5cf6,
+      #6366f1
+    );
+
+  color: white;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  box-shadow:
+    0 6px 16px rgba(99,102,241,0.35);
 }
 
-.dark .xpBadge {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.12);
+.levelBadge small {
+  opacity: .7;
+  font-size: 9px;
 }
+
+.resourceRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.coinBadge,
+.xpBadge {
+  height: 26px;
+
+  padding: 0 10px;
+
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(10px);
+}
+
+.coinBadge {
+  background: rgba(250,204,21,0.12);
+  color: #fde68a;
+}
+
+
+
+
+.levelTrack {
+  position: relative;
+
+  width: 100%;
+  height: 7px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.06);
+}
+
+.levelFill {
+  position: relative;
+
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #8b5cf6,
+      #38bdf8,
+      #22c55e
+    );
+
+  transition: width .35s ease;
+}
+
+/* glow */
+.levelFill::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,0.45),
+      transparent
+    );
+
+  animation: moveGlow 2s linear infinite;
+}
+
+@keyframes moveGlow {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+
 
 /* nếu gần hết stage thì highlight */
 .warn {
@@ -227,28 +448,26 @@
 
 /* ================= SURVIVAL HUD ================= */
 .survivalHUD {
-  margin-top: 10px;
-  position: relative;
-
   display: flex;
   flex-direction: column;
   gap: 10px;
 
   padding: 12px;
 
-  border-radius: 16px;
+  border-radius: 18px;
 
-  background: linear-gradient(
-    180deg,
-    rgba(255,255,255,0.06),
-    rgba(255,255,255,0.02)
-  );
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.05),
+      rgba(255,255,255,0.02)
+    );
 
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.06);
 
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.06),
-    0 10px 30px rgba(0,0,0,0.35);
+  position: relative;
+
+  overflow: visible;
 }
 
 /* ambient */
@@ -263,57 +482,69 @@
 /* ================= TOP ================= */
 .hudTop {
   position: relative;
+  z-index: 2;
 }
 
 /* ================= TRACK ================= */
 .hpTrack {
   position: relative;
-  width: 100%;
-  height: 14px;
+
+  height: 18px;
 
   border-radius: 999px;
+
   overflow: hidden;
 
-  background: rgba(255,255,255,0.06);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.08),
+      rgba(255,255,255,0.03)
+    );
 
   box-shadow:
-    inset 0 2px 6px rgba(0,0,0,0.5);
+    inset 0 2px 8px rgba(0,0,0,0.55);
 }
 
 /* 🔥 máu */
 .hpFill {
-  height: 100%;
-  border-radius: 999px;
-
-  background: linear-gradient(
-    90deg,
-    #22c55e,
-    #eab308,
-    #ef4444
-  );
-
   position: relative;
 
-  transition: width 0.4s cubic-bezier(0.22,1,0.36,1);
+  height: 100%;
+
+  border-radius: inherit;
+
+  transition:
+    width .45s cubic-bezier(.22,1,.36,1);
+
+  background:
+    linear-gradient(
+      90deg,
+      #22c55e 0%,
+      #facc15 60%,
+      #ef4444 100%
+    );
 
   box-shadow:
-    0 0 10px rgba(34,197,94,0.4);
+    0 0 18px rgba(34,197,94,0.35);
 }
 
-/* highlight chạy */
+/* shiny */
 .hpFill::after {
   content: "";
+
   position: absolute;
   inset: 0;
 
-  background: linear-gradient(
-    120deg,
-    transparent 20%,
-    rgba(255,255,255,0.25),
-    transparent 80%
-  );
+  background:
+    linear-gradient(
+      120deg,
+      transparent 20%,
+      rgba(255,255,255,0.4),
+      transparent 80%
+    );
 
-  opacity: 0.4;
+  animation: hpShine 2.4s linear infinite;
 }
 
 /* 💥 khi mất máu */
@@ -331,118 +562,83 @@
     box-shadow: none;
   }
 }
+
+@keyframes hpShine {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
 /* ================= FACE (REAL MARKER) ================= */
+
 .faceFloat {
   position: absolute;
+
   top: 50%;
 
   transform: translate(-50%, -50%);
-  z-index: 10;
 
   font-size: 28px;
 
+  z-index: 10;
+
   transition:
-    left 0.4s cubic-bezier(0.22,1,0.36,1),
-    transform 0.2s ease;
+    left .4s cubic-bezier(.22,1,.36,1),
+    transform .2s ease;
 }
 
 /* danger pulse */
-.danger .faceFloat {
-  animation: dangerPulse 0.6s infinite;
+.critical .faceFloat {
+  animation: deathPop 0.6s ease forwards;
+  z-index: 999;
+  filter: drop-shadow(0 0 12px rgba(255,0,0,0.8));
 }
 
-@keyframes dangerPulse {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.25); }
-  100% { transform: translate(-50%, -50%) scale(1); }
-}
-
-/* combo (🔥 streak) */
-.combo .faceFloat {
-  animation: faceBounce 0.4s;
-}
-
-@keyframes faceBounce {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -60%) scale(1.3); }
-  100% { transform: translate(-50%, -50%) scale(1); }
-}
-
-/* 😎 combo */
-.combo .faceFloat {
-  animation: bounce 0.4s;
-}
-
-@keyframes bounce {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -60%) scale(1.3); }
-  100% { transform: translate(-50%, -50%) scale(1); }
-}
-
-.warning {
-  border-radius: 999px;
-  background: rgba(250, 204, 21, 0.08);
-}
-
-.danger {
-  border-radius: 999px;
-  background: rgba(239, 68, 68, 0.08);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
-}
-.danger {
-  border-radius: 999px;
-  animation: hudShake 0.4s infinite;
-}
-
-@keyframes hudShake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-1px); }
-  50% { transform: translateX(1px); }
-  75% { transform: translateX(-1px); }
-  100% { transform: translateX(0); }
-}
-
-/* ================= STAGE BAR ================= */
-.stageBar {
-  width: 100%;
-  height: 4px;
-
-  border-radius: 999px;
-  overflow: hidden;
-
-  background: rgba(255,255,255,0.05);
-}
-
-.stageFill {
-  height: 100%;
-
-  background: linear-gradient(
-    90deg,
-    #38bdf8,
-    #a78bfa
-  );
-
-  box-shadow:
-    0 0 12px rgba(167,139,250,0.5);
-
-  transition: width 0.4s cubic-bezier(0.22,1,0.36,1);
-}
-
-/* ================= DANGER STATE ================= */
-.danger {
-  animation: none;
+@keyframes deathPop {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  40% {
+    transform: translate(-50%, -60%) scale(1.6) rotate(-10deg);
+  }
+  100% {
+    transform: translate(-50%, -70%) scale(1.2);
+  }
 }
 
 
-@keyframes microShake {
-  0% { transform: translate(0,0); }
-  25% { transform: translate(0.5px,-0.5px); }
-  50% { transform: translate(-0.5px,0.5px); }
-  75% { transform: translate(0.5px,0.5px); }
-  100% { transform: translate(0,0); }
+.critical .hpFill {
+  animation: hpBlink 0.8s infinite;
 }
 
+@keyframes hpBlink {
+  0% {
+    filter: brightness(1) saturate(1);
+    transform: scaleY(1);
+  }
+  50% {
+    filter: brightness(2.2) saturate(2);
+    transform: scaleY(1.05);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scaleY(1);
+  }
+}
 
+.critical .hpTrack {
+  animation: heartbeat 0.6s infinite;
+}
+
+@keyframes heartbeat {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.01); }
+  50% { transform: scale(1.02); }
+  70% { transform: scale(1.01); }
+  100% { transform: scale(1); }
+}
 
 .topBar,
 .survivalHUD,
@@ -483,7 +679,7 @@
 /* chữ Nhật */
 .jpText {
   font-size: 18px;
-  line-height: 1.6;
+  line-height: 2;
   font-family: "Noto Sans JP", sans-serif;
 
   flex: 1;        /* 🔥 quan trọng */
@@ -503,7 +699,7 @@
 
 /* furigana */
 .jpText rt {
-  font-size: 11px;
+  font-size: 12px;
   color: #888;
   text-align: center;
   line-height: 1;
@@ -1195,6 +1391,59 @@
   text-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
 
   animation: xpPop 0.4s ease;
+}
+
+.rewardPanel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.rewardItem {
+  padding: 12px;
+  border-radius: 14px;
+  text-align: center;
+  background: rgba(34,197,94,0.10);
+  border: 1px solid rgba(34,197,94,0.22);
+  animation: xpPop 0.4s ease;
+}
+
+.rewardItem span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.rewardItem strong {
+  font-size: 22px;
+  font-weight: 950;
+  color: var(--success);
+}
+
+.rewardPenalty {
+  background: rgba(239,68,68,0.10);
+  border-color: rgba(239,68,68,0.24);
+}
+
+.rewardPenalty strong {
+  color: var(--danger);
+}
+
+.levelUp {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 900;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--success));
+  box-shadow: 0 12px 28px rgba(99,102,241,0.22);
+  animation: xpPop 0.45s ease;
 }
 
 @keyframes xpPop {

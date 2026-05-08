@@ -25,6 +25,8 @@ export default function GameClient() {
       phase={view.phase}
       event={view.event}
       xpGain={view.xpGain}
+      coinGain={view.coinGain}
+      leveledUp={view.leveledUp}
       isLocked={view.isLocked}
       canAnswer={view.canAnswer}
       onAnswer={view.answer}

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react"
 import { api } from "@/src/game/api"
 import { getSmartMessage } from "@/src/game/utils"
 import { preloadAudioContext } from "@/src/game/sound"
+import { getLevelProgress, getRankName } from "@/src/game/config"
 
 /* ================= COMPONENT ================= */
 
@@ -25,6 +26,8 @@ export default function GameScreen({
   setShowTranslate,
   event,
   xpGain,
+  coinGain = 0,
+  leveledUp = false,
   prevStreak,
 }: any) {
 
@@ -60,10 +63,15 @@ export default function GameScreen({
     progress?.stageGoal ?? 1
   )
 
+  const levelInfo = getLevelProgress(progress?.xp ?? 0)
+  const rankName = getRankName(progress?.level ?? levelInfo.level)
+
   /* ================= XP ANIMATION ================= */
 
   const [xpAnimated, setXpAnimated] = useState(0)
+  const [coinAnimated, setCoinAnimated] = useState(0)
   const xpRef = useRef<any>(null)
+  const coinRef = useRef<any>(null)
 
   useEffect(() => {
     if (xpRef.current) clearInterval(xpRef.current)
@@ -89,6 +97,33 @@ export default function GameScreen({
 
     return () => clearInterval(xpRef.current)
   }, [xpGain])
+
+  useEffect(() => {
+    if (coinRef.current) clearInterval(coinRef.current)
+
+    if (!coinGain) {
+      setCoinAnimated(0)
+      return
+    }
+
+    const sign = coinGain < 0 ? -1 : 1
+    const target = Math.abs(coinGain)
+    let value = 0
+    const step = Math.max(1, Math.ceil(target / 12))
+
+    coinRef.current = setInterval(() => {
+      value += step
+
+      if (value >= target) {
+        value = target
+        clearInterval(coinRef.current)
+      }
+
+      setCoinAnimated(value * sign)
+    }, 18)
+
+    return () => clearInterval(coinRef.current)
+  }, [coinGain])
 
   /* ================= AUTO SCROLL ================= */
 
@@ -280,19 +315,28 @@ export default function GameScreen({
   const MAX_HP = 5
   const hp = progress.hp ?? MAX_HP
   const hpRatio = hp / MAX_HP
+  const isCritical = hp <= 1
+  const isLow = hp <= 2
  
   const status =
-    hp <= 1 ? `${styles.danger} ${styles.lowHP}` :
-    hp <= 2 ? styles.warning :
-    styles.normal
+  isCritical
+    ? `${styles.danger} ${styles.critical}`
+    : isLow
+    ? styles.warning
+    : styles.normal
 
   const getFace = () => {
     if (hp <= 0) return "💀"
-    if (hp === 1) return "😵"
-    if (hp === 2) return "😰"
+
+    if (hp <= 1) {
+      return progress.streak >= 4 ? "😵‍💫" : "😵"
+    }
+
+    if (hp <= 2) return "😰"
 
     if (progress.streak >= 6) return "🔥"
     if (progress.streak >= 4) return "😎"
+
     if (hp === MAX_HP) return "😄"
 
     return "🙂"
@@ -303,7 +347,10 @@ export default function GameScreen({
   return (
     <div className={`${styles.game} ${isLocked ? styles.locked : ""}`}>
 
-      {/* HEADER */}
+    {/* HEADER */}
+    <div className={styles.hudShell}>
+
+      {/* TOP */}
       <div className={styles.topBar}>
 
         <button
@@ -311,60 +358,93 @@ export default function GameScreen({
           onClick={() => window.location.href = "/"}
         >
           <span className="material-symbols-rounded">
-            arrow_back_ios
+            arrow_back_ios_new
           </span>
         </button>
 
         <div className={styles.stageInfo}>
+
           <div className={styles.dayLabel}>
-            Ngày {dayMeta?.order ?? progress.dayId}
-            {dayMeta?.name ? ` • ${dayMeta.name}` : ""}
+            DAY {dayMeta?.order ?? progress.dayId}
           </div>
 
           <div className={styles.stageTitle}>
-            Màn {progress.stageOrder ?? progress.stageId}
-            {progress.stageName ? ` — ${progress.stageName}` : ""}
+            {progress.stageName || `Stage ${progress.stageId}`}
           </div>
 
           <div className={styles.stageSub}>
-            Câu {currentTurn} / {progress.stageGoal}
+            Nhật sinh tồn • Câu {currentTurn}/{progress.stageGoal}
           </div>
+
         </div>
 
-        <div className={styles.xp}>
-          <span className={styles.xpBadge}>⭐ {progress.xp}</span>
+        <div className={styles.playerMini}>
+
+          <div className={styles.levelBadge}>
+            Lv {progress.level}
+            <small>{rankName}</small>
+          </div>
+
+          <div className={styles.resourceRow}>
+
+            <div className={styles.coinBadge}>
+              ¥ {progress.coins}
+            </div>
+
+            <div className={styles.xpBadge}>
+              ⭐ {progress.xp}
+            </div>
+
+          </div>
+
         </div>
 
       </div>
 
-      {/* HP */}
+      {/* XP TRACK */}
+      <div className={styles.levelTrack}>
+        <div
+          className={styles.levelFill}
+          style={{
+            width: `${levelInfo.ratio * 100}%`
+          }}
+        />
+      </div>
+
+      {/* SURVIVAL HUD */}
       <div className={`${styles.survivalHUD} ${status}`}>
+
         <div className={styles.hudTop}>
 
-          <div className={`${styles.hpTrack} ${isHit || skipEffect ? styles.damageFlash : ""}`}>
+          <div
+            className={`${styles.hpTrack} ${
+              isHit || skipEffect
+                ? styles.damageFlash
+                : ""
+            }`}
+          >
             <div
               className={styles.hpFill}
-              style={{ width: `${hpRatio * 100}%` }}
+              style={{
+                width: `${hpRatio * 100}%`
+              }}
             />
           </div>
 
           <div
-            className={`${styles.faceFloat} ${status}`}
-            style={{ left: `calc(${hpRatio * 100}% - 14px)` }}
+            className={styles.faceFloat}
+            style={{
+              left: `calc(${hpRatio * 100}% - 10px)`
+            }}
           >
             {getFace()}
           </div>
+
         </div>
 
-        <div className={styles.stageBar}>
-          <div
-            className={styles.stageFill}
-            style={{
-              width: `${((progress.turn ?? 1) / (progress.stageGoal ?? 8)) * 100}%`
-            }}
-          />
-        </div>
       </div>
+
+    </div>
 
       {/* QUESTION */}
       <div className={styles.questionCard}>
@@ -508,9 +588,25 @@ export default function GameScreen({
               {selected.feedback}
             </div>
 
-            <div className={styles.xpGain}>
-              ⭐ +{xpAnimated}
+            <div className={styles.rewardPanel}>
+              <div className={styles.rewardItem}>
+                <span>XP</span>
+                <strong>⭐ +{xpAnimated}</strong>
+              </div>
+
+              <div className={`${styles.rewardItem} ${coinAnimated < 0 ? styles.rewardPenalty : ""}`}>
+                <span>Tiền</span>
+                <strong>
+                  ¥ {coinAnimated > 0 ? `+${coinAnimated}` : coinAnimated}
+                </strong>
+              </div>
             </div>
+
+            {leveledUp && (
+              <div className={styles.levelUp}>
+                Lên Lv {progress.level} · {rankName}
+              </div>
+            )}
 
             <button
               className={styles.nextBtn}

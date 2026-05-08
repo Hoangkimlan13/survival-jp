@@ -1,13 +1,49 @@
 import React from "react";
 
-export function renderJapanese(text: string, reading?: any[]) {
+type ReadingItem = {
+  text: string
+  reading?: string
+}
+
+function alignReadingToText(text: string, reading: ReadingItem[]) {
+  const result: ReadingItem[] = []
+  let cursor = 0
+
+  for (const item of reading) {
+    if (!item.text) continue
+
+    const foundAt = text.indexOf(item.text, cursor)
+
+    if (foundAt === -1) {
+      result.push(item)
+      continue
+    }
+
+    if (foundAt > cursor) {
+      result.push({ text: text.slice(cursor, foundAt) })
+    }
+
+    result.push(item)
+    cursor = foundAt + item.text.length
+  }
+
+  if (cursor < text.length) {
+    result.push({ text: text.slice(cursor) })
+  }
+
+  return result
+}
+
+export function renderJapanese(text: string, reading?: ReadingItem[]) {
   if (!reading?.length) {
     return <span className="jpText">{text}</span>;
   }
 
+  const alignedReading = alignReadingToText(text, reading)
+
   return (
     <span className="jpText">
-      {reading.map((item, i) => {
+      {alignedReading.map((item, i) => {
         const hasRuby =
           item.reading &&
           item.text &&

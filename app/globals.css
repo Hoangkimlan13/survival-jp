@@ -83,6 +83,54 @@ body {
   transition: background 0.35s ease, color 0.35s ease;
 }
 
+body.haptic-light .app-frame,
+body.haptic-medium .app-frame,
+body.haptic-heavy .app-frame,
+body.haptic-error .app-frame,
+body.haptic-success .app-frame {
+  will-change: transform, filter;
+}
+
+body.haptic-light .app-frame {
+  animation: hapticLight 120ms ease-out;
+}
+
+body.haptic-medium .app-frame {
+  animation: hapticMedium 150ms ease-out;
+}
+
+body.haptic-heavy .app-frame,
+body.haptic-error .app-frame {
+  animation: hapticHeavy 210ms ease-out;
+}
+
+body.haptic-success .app-frame {
+  animation: hapticSuccess 180ms ease-out;
+}
+
+@keyframes hapticLight {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  45% { transform: translate3d(0, -1px, 0); }
+}
+
+@keyframes hapticMedium {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  35% { transform: translate3d(1px, -1px, 0); }
+  70% { transform: translate3d(-1px, 1px, 0); }
+}
+
+@keyframes hapticHeavy {
+  0%, 100% { transform: translate3d(0, 0, 0); filter: none; }
+  20% { transform: translate3d(-2px, 0, 0); }
+  45% { transform: translate3d(2px, 1px, 0); filter: saturate(1.15); }
+  70% { transform: translate3d(-1px, -1px, 0); }
+}
+
+@keyframes hapticSuccess {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); filter: none; }
+  45% { transform: translate3d(0, -1px, 0) scale(1.004); filter: saturate(1.12); }
+}
+
 .dark body {
   background: radial-gradient(circle at top, rgba(139, 129, 255, 0.08), transparent 28%), var(--bg);
 }

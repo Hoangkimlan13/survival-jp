@@ -1,6 +1,7 @@
 // lib/progress.ts
 
 import type { Scenario } from "@/src/game/types"
+import { getLevelFromXp } from "@/src/game/config"
 
 /* ================= LOG ================= */
 
@@ -9,6 +10,7 @@ export type ProgressLog = {
   choiceId: number | "SKIP"   // 🔥 FIX 1
   result: "PERFECT" | "GOOD" | "OK" | "BAD" | "SKIP"  // 🔥 FIX 2 (đồng bộ engine)
   xpGain: number
+  coinGain?: number
 }
 
 /* ================= PROGRESS ================= */
@@ -21,6 +23,8 @@ export type Progress = {
 
   turn: number
   xp: number
+  coins: number
+  level: number
   hp: number
 
   streak: number
@@ -48,6 +52,8 @@ export function createDefaultProgress(): Progress {
 
     turn: 1,
     xp: 0,
+    coins: 0,
+    level: 1,
     hp: 5,
 
     streak: 0,
@@ -65,6 +71,7 @@ export function createDefaultProgress(): Progress {
 
 function normalizeProgress(raw: any): Progress {
   const base = createDefaultProgress()
+  const xp = Number(raw?.xp ?? base.xp)
 
   return {
     ...base,
@@ -75,7 +82,9 @@ function normalizeProgress(raw: any): Progress {
     usedStories: Array.isArray(raw?.usedStories) ? raw.usedStories : [],
 
     turn: Number(raw?.turn ?? base.turn),
-    xp: Number(raw?.xp ?? base.xp),
+    xp,
+    coins: Number(raw?.coins ?? base.coins),
+    level: Number(raw?.level ?? getLevelFromXp(xp)),
     hp: Number(raw?.hp ?? base.hp),
     stageGoal: Number(raw?.stageGoal ?? base.stageGoal),
     stageOrder: Number(raw?.stageOrder ?? base.stageOrder),

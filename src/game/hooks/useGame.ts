@@ -4,42 +4,90 @@ import { useEffect, useRef, useState } from "react"
 import { engine } from "@/src/game/engine"
 import { api } from "@/src/game/api"
 import { cache } from "@/src/game/cache"
-import { getProgress, setProgress } from "@/lib/progress"
+import { getProgress, setProgress, type Progress } from "@/lib/progress"
 import { MAX_HP, HP_RECOVERY_PER_STAGE } from "@/src/game/constants"
 import { playStorySound, playEndingSound, playFinalSound } from "@/src/game/sound"
+import type { Choice, LoadResult, Scenario, Stage } from "@/src/game/types"
 
 /* ================= UTILS ================= */
 
-function unwrapQuestion(q: any) {
+function unwrapQuestion(q: LoadResult): Scenario | null {
   return q?.type === "question" ? q.data : null
+}
+
+function markUsed(pool: Scenario[] = [], questionId: number) {
+  return pool.map(q => q.id === questionId ? { ...q, used: true } : q)
+}
+
+type GameEvent = {
+  type: string
+  data?: Record<string, unknown>
+  nextStage?: Stage
+  xpGain?: number
+  [key: string]: unknown
+}
+
+function isErrorResult(value: unknown): value is { type: "error"; message: string } {
+  return Boolean(
+    value &&
+    typeof value === "object" &&
+    "type" in value &&
+    value.type === "error"
+  )
 }
 
 /* ================= HOOK ================= */
 
 export function useGame() {
-  const [progress, setProgressState] = useState<any>(null)
-  const [current, setCurrent] = useState<any>(null)
-  const [selected, setSelected] = useState<any>(null)
+  const [progress, setProgressState] = useState<Progress | null>(null)
+  const [current, setCurrent] = useState<Scenario | null>(null)
+  const [selected, setSelected] = useState<Choice | null>(null)
   const [phase, setPhase] = useState<
     "idle" | "answering" | "result" | "transition"
   >("idle")
 
-  const [event, setEvent] = useState<any>(null)
+  const [event, setEvent] = useState<GameEvent | null>(null)
   const [xpGain, setXpGain] = useState(0)
+  const [coinGain, setCoinGain] = useState(0)
+  const [leveledUp, setLeveledUp] = useState(false)
   const [skipEffect, setSkipEffect] = useState(false)
 
-  const nextRef = useRef<any>(null)
+  const nextRef = useRef<Scenario | null>(null)
+  const preloadRef = useRef<Scenario | null>(null)
   const lock = useRef(false)
 
   const [prevStreak, setPrevStreak] = useState(0)
 
+  const loadQuestionPair = async (p: Progress, excludeIds: number[] = []) => {
+    const q1 = await engine.loadQuestion(p, {
+      excludeIds,
+      disableCache: excludeIds.length > 0
+    })
+    const q1Data = unwrapQuestion(q1)
+    if (!q1Data) return null
+
+    const tempProgress = {
+      ...p,
+      pool: markUsed(p.pool, q1Data.id)
+    }
+
+    const q2 = await engine.loadQuestion(tempProgress, {
+      excludeIds: [...excludeIds, q1Data.id],
+      disableCache: true
+    })
+    const q2Data = unwrapQuestion(q2)
+
+    return { current: q1Data, next: q2Data }
+  }
+
   /* ================= EVENT ================= */
 
-  const saveEvent = (e: any) => {
+  const saveEvent = (e: GameEvent) => {
     setEvent(e)
     // Lưu event trong progress thay vì localStorage
-    const updatedProgress = { ...progress, event: e }
-    setProgress(updatedProgress)
+    if (progress) {
+      setProgress({ ...progress, event: e })
+    }
   }
 
   /* ================= INIT ================= */
@@ -54,7 +102,7 @@ export function useGame() {
         const initRes = await engine.init()
 
         // 🧨 FIX CỐT LÕI: đảm bảo không lấy error object
-        if (!initRes || (initRes as any).type === "error") {
+        if (!initRes || isErrorResult(initRes)) {
           console.error("[INIT FAILED]", initRes)
           return
         }
@@ -89,31 +137,17 @@ export function useGame() {
         p = next
       }
 
-      /* ===== LOAD QUESTION AAA ===== */
+      /* ===== LOAD QUESTION PAIR ===== */
 
-      const q1 = await engine.loadQuestion(p)
-      const q1Data = unwrapQuestion(q1)
-      if (!q1Data) return
-
-      // 🔥 mark used cho câu 1 để tránh trùng
-      const tempProgress = {
-        ...p,
-        pool: Array.isArray(p.pool)
-          ? p.pool.map(q =>
-              q.id === q1Data.id ? { ...q, used: true } : q
-            )
-          : []
-      }
-
-      const q2 = await engine.loadQuestion(tempProgress)
-      const q2Data = unwrapQuestion(q2)
-      if (!q2Data) return
+      const pair = await loadQuestionPair(p)
+      if (!pair) return
 
       if (!mounted) return
 
       setProgressState(p)
-      setCurrent(q1Data)
-      nextRef.current = q2Data
+      setCurrent(pair.current)
+      nextRef.current = pair.next
+      preloadRef.current = null
     }
 
     init()
@@ -125,7 +159,7 @@ export function useGame() {
 
   /* ================= ANSWER ================= */
 
-  const answer = async (choice: any) => {
+  const answer = async (choice: Choice) => {
     if (!progress || !current) return
 
     setPhase("answering")
@@ -133,6 +167,8 @@ export function useGame() {
     const res = await engine.answer(progress, current, choice)
 
     setXpGain(res.xpGain || 0)
+    setCoinGain(res.coinGain || 0)
+    setLeveledUp(Boolean(res.leveledUp))
     setProgressState(res.updated)
     setSelected(choice)
     setPrevStreak(res.prevStreak || 0)
@@ -152,8 +188,13 @@ export function useGame() {
         return
       }
 
+      const pair = await loadQuestionPair(next, current?.id ? [current.id] : [])
+      if (!pair) return
+
       setProgressState(next)
-      setCurrent(nextRef.current)
+      setCurrent(pair.current)
+      nextRef.current = pair.next
+      preloadRef.current = null
       setSelected(null)
       setPhase("idle")
       return
@@ -164,12 +205,21 @@ export function useGame() {
     if (!lock.current) {
       lock.current = true
 
-      engine.loadQuestion(res.updated).then(q => {
-        const data = unwrapQuestion(q)
-        if (data) nextRef.current = data
-
-        lock.current = false
+      engine.loadQuestion(res.updated, {
+        excludeIds: [
+          current.id,
+          ...(nextRef.current?.id ? [nextRef.current.id] : [])
+        ],
+        disableCache: true
       })
+        .then(q => {
+          const data = unwrapQuestion(q)
+          if (data) preloadRef.current = data
+        })
+        .catch(console.error)
+        .finally(() => {
+          lock.current = false
+        })
     }
   }
 
@@ -184,6 +234,7 @@ const skip = async () => {
   setTimeout(() => setSkipEffect(false), 300)
 
   const res = await engine.skip(progress, current)
+  const skipCoinGain = res.coinGain || 0
 
   // 🔥 mark câu hiện tại là used (CỰC QUAN TRỌNG)
   const updatedProgress = {
@@ -202,6 +253,10 @@ const skip = async () => {
   }
 
   setProgressState(damaged)
+  setProgress(damaged)
+  setXpGain(0)
+  setCoinGain(skipCoinGain)
+  setLeveledUp(false)
   setSelected(null)
 
   /* ===== END STAGE ===== */
@@ -213,30 +268,24 @@ const skip = async () => {
       return
     }
 
+    const pair = await loadQuestionPair(next, [current.id])
+    if (!pair) return
+
     setProgressState(next)
-    setCurrent(nextRef.current)
+    setCurrent(pair.current)
+    nextRef.current = pair.next
+    preloadRef.current = null
     setPhase("idle")
     return
   }
 
   /* ===== LOAD CÂU MỚI ===== */
-  const q1 = await engine.loadQuestion(damaged)
-  const q1Data = unwrapQuestion(q1)
-  if (!q1Data) return
+  const pair = await loadQuestionPair(damaged, [current.id])
+  if (!pair) return
 
-  // 🔥 mark used tiếp để preload không trùng
-  const tempProgress = {
-    ...damaged,
-    pool: damaged.pool.map(q =>
-      q.id === q1Data.id ? { ...q, used: true } : q
-    )
-  }
-
-  const q2 = await engine.loadQuestion(tempProgress)
-  const q2Data = unwrapQuestion(q2)
-
-  setCurrent(q1Data)
-  nextRef.current = q2Data
+  setCurrent(pair.current)
+  nextRef.current = pair.next
+  preloadRef.current = null
 
   setPhase("idle")
 }
@@ -282,28 +331,20 @@ const skip = async () => {
         // ✅ FIX QUAN TRỌNG
         const fresh = await engine.init(newProgress)
 
-        const q1 = await engine.loadQuestion(fresh)
-        const q1Data = unwrapQuestion(q1)
-        if (!q1Data) return
-
-        const tempProgress = {
-          ...fresh,
-          pool: fresh.pool.map(q =>
-            q.id === q1Data.id ? { ...q, used: true } : q
-          )
-        }
-
-        const q2 = await engine.loadQuestion(tempProgress)
-        const q2Data = unwrapQuestion(q2)
+        const pair = await loadQuestionPair(fresh)
+        if (!pair) return
 
         setProgressState(fresh)
-        setCurrent(q1Data)
-        nextRef.current = q2Data
+        setCurrent(pair.current)
+        nextRef.current = pair.next
+        preloadRef.current = null
 
         setSelected(null)
         setPhase("idle")
 
         setTimeout(() => setXpGain(0), 500)
+        setTimeout(() => setCoinGain(0), 500)
+        setLeveledUp(false)
         return
       }
 
@@ -365,30 +406,20 @@ const skip = async () => {
 
         const fresh = await engine.init(newProgress)
 
-        if (!fresh || (fresh as any).type === "error") {
+        if (!fresh || isErrorResult(fresh)) {
           console.error("[INIT DAY FAILED]", fresh)
           return
         }
 
         /* ================= LOAD QUESTION ================= */
 
-        const q1 = await engine.loadQuestion(fresh)
-        const q1Data = unwrapQuestion(q1)
-        if (!q1Data) return
-
-        const tempProgress = {
-          ...fresh,
-          pool: fresh.pool.map(q =>
-            q.id === q1Data.id ? { ...q, used: true } : q
-          )
-        }
-
-        const q2 = await engine.loadQuestion(tempProgress)
-        const q2Data = unwrapQuestion(q2)
+        const pair = await loadQuestionPair(fresh)
+        if (!pair) return
 
         setProgressState(fresh)
-        setCurrent(q1Data)
-        nextRef.current = q2Data
+        setCurrent(pair.current)
+        nextRef.current = pair.next
+        preloadRef.current = null
 
         setSelected(null)
         setPhase("idle")
@@ -408,8 +439,22 @@ const skip = async () => {
       return
     }
 
-    setProgressState(result)
-    setCurrent(nextRef.current)
+    const upcoming = nextRef.current
+
+    if (!upcoming || upcoming.id === current?.id) {
+      const pair = await loadQuestionPair(result, current?.id ? [current.id] : [])
+      if (!pair) return
+
+      setProgressState(result)
+      setCurrent(pair.current)
+      nextRef.current = pair.next
+      preloadRef.current = null
+    } else {
+      setProgressState(result)
+      setCurrent(upcoming)
+      nextRef.current = preloadRef.current
+      preloadRef.current = null
+    }
 
     setSelected(null)
     setPhase("idle")
@@ -419,9 +464,11 @@ const skip = async () => {
     if (!event) return
 
     if (event.type === "story") {
-      playStorySound(event.data?.trigger)
+      const trigger = event.data?.trigger
+      playStorySound(typeof trigger === "string" ? trigger : undefined)
     } else if (event.type === "ending") {
-      playEndingSound(event.data?.type)
+      const type = event.data?.type
+      playEndingSound(typeof type === "string" ? type : "normal")
     } else if (event.type === "final") {
       playFinalSound()
     }
@@ -439,6 +486,8 @@ const skip = async () => {
     next,
     skip,
     xpGain,
+    coinGain,
+    leveledUp,
     skipEffect,
     prevStreak
   }

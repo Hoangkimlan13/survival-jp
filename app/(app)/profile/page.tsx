@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { getProgress } from "@/lib/progress"
 import { api } from "@/src/game/api"
+import { getRankName } from "@/src/game/config"
 
 import { buildMapNodes } from "./mapUtils"
 import { generatePathsByDay, getNodeState } from "./useProfileMap"
@@ -91,9 +92,19 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        <div className="xpBadge">
-          ⭐
-          <span>{progress.xp}</span>
+        <div className="profileStats">
+          <div className="levelBadge">
+            Lv {progress.level ?? 1}
+            <span>{getRankName(progress.level ?? 1)}</span>
+          </div>
+
+          <div className="coinBadge">
+            ¥ <span>{progress.coins ?? 0}</span>
+          </div>
+
+          <div className="xpBadge">
+            ⭐ <span>{progress.xp}</span>
+          </div>
         </div>
 
       </div>

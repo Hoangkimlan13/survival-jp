@@ -284,12 +284,53 @@
   justify-content: center;
 
   cursor: pointer;
-  transition: all 0.2s ease;
+  position: relative;
+  box-sizing: border-box;
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 }
 
 /* hover */
 .speakBtn:hover {
   transform: scale(1.08);
+}
+
+.speakBtn:disabled,
+.disabled {
+  cursor: not-allowed;
+  color: var(--muted);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(148, 163, 184, 0.08) 0 6px,
+      rgba(148, 163, 184, 0.02) 6px 12px
+    ),
+    var(--btn-bg);
+  border-color: var(--border);
+  box-shadow: none;
+  opacity: 0.58;
+}
+
+.speakBtn:disabled:hover,
+.disabled:hover {
+  transform: none;
+}
+
+.speakBtn:disabled::after,
+.disabled::after {
+  content: "";
+  position: absolute;
+  width: 60%;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(-38deg);
+  opacity: 0.7;
 }
 
 .speakCard {

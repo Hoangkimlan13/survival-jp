@@ -1,121 +1,109 @@
-// lib/haptic.ts
-
 export type HapticLevel = "light" | "medium" | "heavy" | "error" | "success"
+export type AnswerHaptic = "PERFECT" | "GOOD" | "OK" | "BAD" | "SKIP"
 
-const isIOS = () =>
-  typeof window !== "undefined" &&
-  /iPhone|iPad|iPod/i.test(navigator.userAgent)
-
-const canVibrate = () =>
-  typeof navigator !== "undefined" && "vibrate" in navigator
-
-/* ================= CORE ================= */
-
-export function haptic(level: HapticLevel) {
-  if (typeof window === "undefined") return
-
-  // ===== ANDROID / PC =====
-  if (canVibrate()) {
-    const nav = navigator as any
-
-    switch (level) {
-      case "light":
-        nav.vibrate(10)
-        break
-      case "medium":
-        nav.vibrate(40)
-        break
-      case "heavy":
-        nav.vibrate([0, 60, 40, 120])
-        break
-      case "error":
-        nav.vibrate([0, 80, 40, 80])
-        break
-      case "success":
-        nav.vibrate([0, 30, 20, 30])
-        break
-    }
-
-    return
-  }
-
-  // ===== IOS FALLBACK (REAL GAME FEEL) =====
-  iosHaptic(level)
+const PATTERNS: Record<HapticLevel, number | number[]> = {
+  light: 12,
+  medium: 32,
+  heavy: [0, 55, 35, 90],
+  error: [0, 75, 45, 110],
+  success: [0, 24, 22, 34]
 }
 
-/* ================= IOS FAKE HAPTIC ================= */
+const ANSWER_LEVELS: Record<AnswerHaptic, HapticLevel> = {
+  PERFECT: "success",
+  GOOD: "medium",
+  OK: "light",
+  BAD: "error",
+  SKIP: "heavy"
+}
 
-function iosHaptic(level: HapticLevel) {
+function getNavigatorWithVibrate() {
+  if (typeof navigator === "undefined") return null
+
+  return navigator as Navigator & {
+    vibrate?: (pattern: number | number[]) => boolean
+  }
+}
+
+function canVibrate() {
+  return typeof getNavigatorWithVibrate()?.vibrate === "function"
+}
+
+function triggerVisualFallback(level: HapticLevel) {
+  if (typeof document === "undefined") return
+
+  const className = `haptic-${level}`
   const el = document.body
 
-  let className = ""
-
-  switch (level) {
-    case "light":
-      className = "haptic-light"
-      break
-    case "medium":
-      className = "haptic-medium"
-      break
-    case "heavy":
-      className = "haptic-heavy"
-      break
-    case "error":
-      className = "haptic-error"
-      break
-    case "success":
-      className = "haptic-success"
-      break
-  }
-
+  el.classList.remove(className)
+  void el.offsetWidth
   el.classList.add(className)
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     el.classList.remove(className)
-  }, 150)
+  }, 220)
 }
 
-
-export function playTick(level: HapticLevel) {
+function playTick(level: HapticLevel) {
   if (typeof window === "undefined") return
 
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+  const AudioCtor = window.AudioContext || window.webkitAudioContext
+  if (!AudioCtor) return
 
-  const osc = ctx.createOscillator()
-  const gain = ctx.createGain()
+  try {
+    const ctx = new AudioCtor()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
 
-  osc.connect(gain)
-  gain.connect(ctx.destination)
+    const freq: Record<HapticLevel, number> = {
+      light: 220,
+      medium: 320,
+      heavy: 180,
+      error: 110,
+      success: 520
+    }
 
-  let freq = 200
+    osc.type = "sine"
+    osc.frequency.value = freq[level]
 
-  switch (level) {
-    case "light":
-      freq = 220
-      break
-    case "medium":
-      freq = 330
-      break
-    case "heavy":
-      freq = 440
-      break
-    case "error":
-      freq = 120
-      break
-    case "success":
-      freq = 520
-      break
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime)
+    gain.gain.exponentialRampToValueAtTime(0.035, ctx.currentTime + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.07)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start()
+    osc.stop(ctx.currentTime + 0.08)
+
+    window.setTimeout(() => {
+      void ctx.close()
+    }, 120)
+  } catch {
+    // Some browsers block AudioContext outside user gestures.
+  }
+}
+
+export function haptic(level: HapticLevel) {
+  if (typeof window === "undefined") return false
+
+  const nav = getNavigatorWithVibrate()
+
+  if (canVibrate()) {
+    return nav?.vibrate?.(PATTERNS[level]) ?? false
   }
 
-  osc.frequency.value = freq
-  osc.type = "sine"
+  triggerVisualFallback(level)
+  playTick(level)
+  return false
+}
 
-  gain.gain.value = 0.05
+export function answerHaptic(result: AnswerHaptic) {
+  return haptic(ANSWER_LEVELS[result])
+}
 
-  osc.start()
-
-  setTimeout(() => {
-    osc.stop()
-    ctx.close()
-  }, 80)
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext
+  }
 }

@@ -88,26 +88,47 @@
   opacity: 0.7;
 }
 
-/* ===== XP BADGE ===== */
-.xpBadge {
+/* ===== STAT BADGES ===== */
+.profileStats {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.xpBadge,
+.coinBadge,
+.levelBadge {
   display: flex;
   align-items: center;
   gap: 6px;
-
   padding: 6px 10px;
   border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
 
+.xpBadge {
   background: linear-gradient(135deg, var(--primary), var(--info));
   color: white;
-
-  font-size: 12px;
-  font-weight: 600;
-
   box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
 }
 
-.xpBadge .star {
-  font-size: 16px;
+.coinBadge {
+  color: #92400e;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid rgba(245,158,11,0.25);
+}
+
+.levelBadge {
+  color: white;
+  background: linear-gradient(135deg, var(--success), var(--primary));
+}
+
+.levelBadge span {
+  font-size: 10px;
+  opacity: 0.82;
 }
 
 /* ===== MAP ===== */

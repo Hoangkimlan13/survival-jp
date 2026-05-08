@@ -1,149 +1,151 @@
 let voices: SpeechSynthesisVoice[] = []
 let voicesReady: Promise<void> | null = null
 
-let currentUtter: SpeechSynthesisUtterance | null = null
+const JAPANESE_SPEECH_RE =
+  /[\u3040-\u30ff\u3400-\u9fff\u3000-\u303f\uff01-\uff60ー々〆〤]+/g
+
+function getSynth() {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return null
+  }
+
+  return window.speechSynthesis
+}
+
+function loadVoices() {
+  const synth = getSynth()
+  if (!synth) return []
+
+  voices = synth.getVoices()
+  return voices
+}
 
 function initVoices() {
-  if (typeof window === "undefined") return
+  const synth = getSynth()
+  if (!synth) return Promise.resolve()
 
   if (!voicesReady) {
     voicesReady = new Promise((resolve) => {
-      const v = speechSynthesis.getVoices()
-
-      if (v.length > 0) {
-        voices = v
+      if (loadVoices().length > 0) {
         resolve()
-      } else {
-        speechSynthesis.onvoiceschanged = () => {
-          voices = speechSynthesis.getVoices()
-          resolve()
-        }
+        return
       }
+
+      const done = () => {
+        loadVoices()
+        resolve()
+      }
+
+      synth.addEventListener?.("voiceschanged", done, { once: true })
+      synth.onvoiceschanged = done
+
+      // Safari iOS may not fire voiceschanged before the first gesture.
+      window.setTimeout(done, 300)
     })
   }
 
   return voicesReady
 }
 
-/* ================= LANGUAGE DETECT PRO ================= */
-function detectLang(text: string): "ja-JP" | "vi-VN" | "en-US" {
-  // Ưu tiên phát hiện tiếng Nhật trước
-  if (/[\u3040-\u30ff\u4e00-\u9faf]/.test(text)) return "ja-JP"
+export function prepareSpeechSynthesis() {
+  const synth = getSynth()
+  if (!synth) return
 
-  if (/[ăâđêôơưáàảãạắằẳẵặấầẩẫậéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i.test(text))
-    return "vi-VN"
+  loadVoices()
+  void initVoices()
 
-  if (/[a-zA-Z]/.test(text)) return "en-US"
-
-  return "en-US"
+  if (synth.paused) {
+    synth.resume()
+  }
 }
 
-/* ================= FILTER JAPANESE ONLY ================= */
-function extractJapanese(text: string): string {
+export function extractJapaneseSpeechText(text: string) {
   if (!text) return ""
 
-  const matches = text.match(/[\u3040-\u30ff\u4e00-\u9fafー]+/g)
-
-  if (!matches) return ""
-
-  return matches.join("").trim()
+  return (text.match(JAPANESE_SPEECH_RE) ?? [])
+    .join("")
+    .replace(/\s+/g, "")
+    .trim()
 }
-/* ================= SMART VOICE PICK ================= */
-function getBestVoice(lang: string) {
-  const list = voices
 
-  const exact = list.find(v => v.lang === lang)
-  if (exact) return exact
+export function hasJapaneseSpeechText(text: string) {
+  return extractJapaneseSpeechText(text).length > 0
+}
 
-  const prefix = list.find(v => v.lang.startsWith(lang.split("-")[0]))
-  if (prefix) return prefix
+function getBestJapaneseVoice() {
+  const list = voices.length ? voices : loadVoices()
+  const jaVoices = list.filter(v => v.lang.toLowerCase().startsWith("ja"))
 
-  // 🇻🇳 ưu tiên Google tiếng Việt
-  if (lang === "vi-VN") {
-    return (
-      list.find(v => v.name.toLowerCase().includes("google") && v.lang.includes("vi")) ||
-      list.find(v => v.lang.includes("vi"))
-    )
+  if (!jaVoices.length) return null
+
+  const preferredNames = [
+    "kyoko",
+    "nanami",
+    "siri",
+    "premium",
+    "enhanced",
+    "google"
+  ]
+
+  for (const name of preferredNames) {
+    const found = jaVoices.find(v => v.name.toLowerCase().includes(name))
+    if (found) return found
   }
 
-  // 🇯🇵 ưu tiên Japanese natural voice
-  if (lang === "ja-JP") {
-    return (
-      list.find(v => v.name.toLowerCase().includes("google")) ||
-      list.find(v => v.lang.includes("ja"))
-    )
-  }
-
-  return list[0]
+  return jaVoices.find(v => v.localService) ?? jaVoices[0]
 }
 
-/* ================= SPLIT MIX TEXT ================= */
-function splitMixedText(text: string) {
-  // tách nhẹ để JP + VI không bị đọc sai
-  return text
-    .replace(/([。！？])/g, "$1|")
-    .split("|")
-    .filter(Boolean)
-}
-
-/* ================= MAIN SPEAK PRO ================= */
 export async function speak(
   text: string,
   opts?: { rate?: number; pitch?: number },
   onEnd?: () => void
 ) {
-  if (!("speechSynthesis" in window)) return
+  const synth = getSynth()
+  if (!synth) {
+    onEnd?.()
+    return
+  }
 
-  await initVoices()
+  prepareSpeechSynthesis()
 
-  // 🔥 STOP toàn bộ audio cũ
-  speechSynthesis.cancel()
-  currentUtter = null
-
-  // 🎌 Chỉ phát âm phần tiếng Nhật để tập trung học tiếng Nhật
-  const japaneseText = extractJapanese(text)
-
+  const japaneseText = extractJapaneseSpeechText(text)
   if (!japaneseText) {
     onEnd?.()
     return
   }
 
-  const parts = japaneseText.split(" ")
+  synth.cancel()
+  synth.resume()
+  void initVoices()
 
-  let index = 0
+  const utter = new SpeechSynthesisUtterance(japaneseText)
 
-  const playNext = () => {
-    if (index >= parts.length) {
-      onEnd?.()
-      return
-    }
+  utter.lang = "ja-JP"
+  utter.rate = opts?.rate ?? 0.78
+  utter.pitch = opts?.pitch ?? 1.08
+  utter.volume = 1
 
-    const chunk = parts[index++]
+  const voice = getBestJapaneseVoice()
+  if (voice) utter.voice = voice
 
-    const utter = new SpeechSynthesisUtterance(chunk)
-
-    currentUtter = utter
-
-    // 🔥 LUÔN là tiếng Nhật
-    utter.lang = "ja-JP"
-
-    utter.rate = opts?.rate ?? 0.85
-    utter.pitch = opts?.pitch ?? 1
-
-    const voice = getBestVoice("ja-JP")
-    if (voice) utter.voice = voice
-
-    utter.onend = playNext
-
-    speechSynthesis.speak(utter)
+  utter.onend = () => {
+    onEnd?.()
   }
 
-  playNext()
+  utter.onerror = () => {
+    onEnd?.()
+  }
+
+  synth.speak(utter)
+
+  window.setTimeout(() => {
+    if (synth.paused) synth.resume()
+  }, 120)
 }
 
-/* ================= STOP SPEAK ================= */
 export function stopSpeak() {
-  if (!("speechSynthesis" in window)) return
-  speechSynthesis.cancel()
-  currentUtter = null
+  const synth = getSynth()
+  if (!synth) return
+
+  synth.cancel()
 }

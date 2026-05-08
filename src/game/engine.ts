@@ -15,10 +15,17 @@ import type {
   ReadingItem, 
   Story, 
   Ending,
+  Stage,
   EndingType 
 } from "./types"
 
-import { QUALITY_SCORE, QUALITY_RESULT, type ChoiceQuality } from "./config"
+import {
+  QUALITY_COINS,
+  QUALITY_SCORE,
+  QUALITY_RESULT,
+  getLevelFromXp,
+  type ChoiceQuality
+} from "./config"
 import { api } from "./api"
 import {
   fireConfetti,
@@ -41,7 +48,7 @@ import { getStoryTrigger } from "./story"
 import { analyzeEnding, getEndingType } from "./endingAI"
 import { pickEnding } from "./endingPicker"
 import { getEndingsCached } from "./endingCache"
-import { vibrate } from "@/src/lib/vibrate"
+import { answerHaptic } from "@/src/lib/haptic"
 /* ================= CACHE ================= */
 
 
@@ -60,7 +67,7 @@ const KANJI_RE = /[\u4e00-\u9faf]/;
 const KANA_RE = /[\u3040-\u30ff]/;
 
 export function smartSegment(text: string, reading: ReadingItem[] = []) {
-  const result: any[] = [];
+  const result: ReadingItem[] = [];
 
   let i = 0;
 
@@ -94,7 +101,7 @@ export function smartSegment(text: string, reading: ReadingItem[] = []) {
 }
 
 
-const readingCache = new Map<string, any>()
+const readingCache = new Map<string, ReadingItem[]>()
 
 async function parseBatch(texts: string[]) {
   const uncached = texts.filter(t => !readingCache.has(t))
@@ -108,14 +115,16 @@ async function parseBatch(texts: string[]) {
       body: JSON.stringify({ texts: uncached })
     })
 
-    const data = res.ok ? await res.json() : {}
+    const data = res.ok
+      ? await res.json() as Record<string, ReadingItem[]>
+      : {}
 
     Object.entries(data).forEach(([text, value]) => {
       readingCache.set(text, value)
     })
   }
 
-  const result: Record<string, any> = {}
+  const result: Record<string, ReadingItem[]> = {}
 
   texts.forEach(t => {
     result[t] = readingCache.get(t) || []
@@ -135,6 +144,11 @@ function shuffle<T>(arr: T[] = []): T[] {
   return a
 }
 
+type LoadQuestionOptions = {
+  excludeIds?: number[]
+  disableCache?: boolean
+}
+
 /* ================= AI SYSTEM ================= */
 
 function getDifficulty(progress: Progress) {
@@ -144,20 +158,65 @@ function getDifficulty(progress: Progress) {
 }
 
 
-function pickQuestion(pool: Scenario[], progress: Progress): Scenario {
-  const unused = pool.filter(q => !q.used)
+function getRecentQuestionIds(progress: Progress, limit = 3) {
+  return (progress.history ?? [])
+    .slice(-limit)
+    .map(h => h.questionId)
+    .filter((id): id is number => typeof id === "number")
+}
 
-  // ❌ nếu hết câu → reset used (quan trọng)
-  if (unused.length === 0) {
-    const resetPool = pool.map(q => ({ ...q, used: false }))
+function markQuestionUsed(pool: Scenario[], questionId: number) {
+  return pool.map(q => q.id === questionId ? { ...q, used: true } : q)
+}
 
-    // ❗ KHÔNG mutate progress trực tiếp
-    return resetPool[Math.random() * resetPool.length | 0]
+function isCachedQuestionValid(
+  result: LoadResult,
+  progress: Progress,
+  excludeIds: number[]
+) {
+  if (result.type !== "question") return true
+
+  const questionId = result.data.id
+  const poolItem = progress.pool?.find(q => q.id === questionId)
+  const lastQuestionIds = getRecentQuestionIds(progress, 1)
+
+  return !poolItem?.used &&
+    !excludeIds.includes(questionId) &&
+    !lastQuestionIds.includes(questionId)
+}
+
+function pickQuestion(
+  pool: Scenario[],
+  progress: Progress,
+  options: LoadQuestionOptions = {}
+): Scenario {
+  const excluded = new Set(options.excludeIds ?? [])
+  const recentIds = new Set(getRecentQuestionIds(progress))
+  let candidates = pool.filter(q => !q.used && !excluded.has(q.id))
+
+  if (candidates.length > 1) {
+    const notRecent = candidates.filter(q => !recentIds.has(q.id))
+    if (notRecent.length) candidates = notRecent
+  }
+
+  // If the stage goal is bigger than the available questions, recycle
+  // old questions but keep the immediate previous question out.
+  if (candidates.length === 0) {
+    candidates = pool.filter(q => !excluded.has(q.id))
+
+    if (candidates.length > 1) {
+      const notRecent = candidates.filter(q => !recentIds.has(q.id))
+      if (notRecent.length) candidates = notRecent
+    }
+  }
+
+  if (candidates.length === 0) {
+    candidates = pool
   }
 
   const difficulty = getDifficulty(progress)
 
-  const weak = unused.filter(q =>
+  const weak = candidates.filter(q =>
     progress.history?.some(h => h.questionId === q.id && h.result === "BAD")
   )
 
@@ -165,12 +224,12 @@ function pickQuestion(pool: Scenario[], progress: Progress): Scenario {
     return weak[Math.random() * weak.length | 0]
   }
 
-  return unused[Math.random() * unused.length | 0]
+  return candidates[Math.random() * candidates.length | 0]
 }
 
 /* ================= Story và ending ================= */
 
-function weightedRandom(stories: any[]) {
+function weightedRandom(stories: Story[]) {
   if (!stories || stories.length === 0) return null
 
   const total = stories.reduce((sum, s) => {
@@ -241,7 +300,7 @@ export const engine = {
     }
 
     const currentStage = stages.find(
-      (s: any) => Number(s.id) === Number(progress.stageId)
+      (s: Stage) => Number(s.id) === Number(progress.stageId)
     )
 
     const stageGoal =
@@ -262,7 +321,7 @@ export const engine = {
       return {
         type: "error",
         message: `No questions for stage ${currentStageId}`
-      } as any
+      } as unknown as Progress
     }
 
     // 🎯 NOW SAFE TO SHUFFLE
@@ -274,7 +333,7 @@ export const engine = {
       return {
         type: "error",
         message: "Stage has no questions"
-      } as any
+      } as unknown as Progress
     }
 
     const pool = shuffle(filtered).slice(0, stageGoal)
@@ -303,7 +362,10 @@ export const engine = {
 
   /* ================= LOAD CORE ================= */
 
-  async _loadFresh(progress: Progress): Promise<LoadResult> {
+  async _loadFresh(
+    progress: Progress,
+    options: LoadQuestionOptions = {}
+  ): Promise<LoadResult> {
     if (!progress?.pool || !Array.isArray(progress.pool)) {
       return {
         type: "error",
@@ -318,7 +380,7 @@ export const engine = {
       return { type: "error", message: "No pool" }
     }
 
-    const picked = pickQuestion(progress.pool, progress)
+    const picked = pickQuestion(progress.pool, progress, options)
     const shuffledChoices = shuffle([...picked.choices])
 
     const texts = [
@@ -354,7 +416,17 @@ export const engine = {
       const first = await this._loadFresh(progress)
       cache1 = { stageId, data: first }
 
-      const second = await this._loadFresh(progress)
+      const firstQuestionId = first.type === "question" ? first.data.id : null
+      const secondProgress = firstQuestionId
+        ? {
+            ...progress,
+            pool: markQuestionUsed(progress.pool, firstQuestionId)
+          }
+        : progress
+
+      const second = await this._loadFresh(secondProgress, {
+        excludeIds: firstQuestionId ? [firstQuestionId] : []
+      })
       cache2 = { stageId, data: second }
     } catch {
       cache1 = null
@@ -364,10 +436,19 @@ export const engine = {
 
   /* ================= LOAD ================= */
 
-  async loadQuestion(progress: Progress): Promise<LoadResult> {
+  async loadQuestion(
+    progress: Progress,
+    options: LoadQuestionOptions = {}
+  ): Promise<LoadResult> {
     const stageId = progress.stageId
+    const excludeIds = options.excludeIds ?? []
 
-    if (cache1 && cache1.stageId === stageId) {
+    if (
+      !options.disableCache &&
+      cache1 &&
+      cache1.stageId === stageId &&
+      isCachedQuestionValid(cache1.data, progress, excludeIds)
+    ) {
       const res = cache1.data
 
       cache1 = cache2
@@ -383,7 +464,7 @@ export const engine = {
       return res
     }
 
-    const result = await this._loadFresh(progress)
+    const result = await this._loadFresh(progress, options)
 
     this.preload(progress)
 
@@ -396,22 +477,24 @@ export const engine = {
     const quality: ChoiceQuality = choice.quality ?? "OK"
 
     const xpGain = QUALITY_SCORE[quality]
+    const coinGain = QUALITY_COINS[quality]
     const result = QUALITY_RESULT[quality] as ProgressLog["result"]
 
     /* EFFECT */
     if (quality === "BAD") {
       addScreenShake()
-      vibrate([0, 80, 40, 120], document.body)
+      answerHaptic("BAD")
       setTimeout(removeScreenShake, 300)
       playWrong()
     } else if (quality === "PERFECT") {
-      vibrate([0, 40, 30, 40], document.body)
+      answerHaptic("PERFECT")
       fireConfetti({ particleCount: 100, spread: 80 })
       playCorrect()
     } else if (quality === "GOOD") {
-      vibrate(30, document.body)
+      answerHaptic("GOOD")
       playCorrect()
     } else {
+      answerHaptic("OK")
       playOk()
     }
 
@@ -430,6 +513,8 @@ export const engine = {
     if (progress.hp <= 2) hpChange -= 0.5
 
     const newHp = Math.max(0, Math.min(MAX_HP, progress.hp + hpChange))
+    const nextXp = progress.xp + xpGain
+    const nextCoins = Math.max(0, (progress.coins ?? 0) + coinGain)
 
     /* UPDATE POOL */
     const safePool = Array.isArray(progress.pool) ? progress.pool : []
@@ -443,7 +528,9 @@ export const engine = {
     const updated: Progress = {
       ...progress,
       pool: newPool,
-      xp: progress.xp + xpGain,
+      xp: nextXp,
+      coins: nextCoins,
+      level: getLevelFromXp(nextXp),
       hp: newHp,
       streak: quality !== "BAD" ? progress.streak + 1 : 0,
       turn: nextTurn,
@@ -453,7 +540,8 @@ export const engine = {
           questionId: data.id,
           choiceId: choice.id,
           result,
-          xpGain
+          xpGain,
+          coinGain
         }
       ]
     }
@@ -465,6 +553,9 @@ export const engine = {
     return {
       updated,
       xpGain,
+      coinGain,
+      level: getLevelFromXp(nextXp),
+      leveledUp: getLevelFromXp(nextXp) > (progress.level ?? getLevelFromXp(progress.xp)),
       result,
       quality,
       forceEnd,
@@ -492,10 +583,14 @@ async skip(progress: Progress, data: Scenario) {
   const newHp = Math.max(0, progress.hp - hpLoss)
 
   const nextTurn = progress.turn + 1
+  const coinGain = -1
+  const nextCoins = Math.max(0, (progress.coins ?? 0) + coinGain)
 
   const updated: Progress = {
     ...progress,
     pool: newPool,
+    coins: nextCoins,
+    level: getLevelFromXp(progress.xp),
     hp: newHp,
     streak: 0, // skip thì break combo
     turn: nextTurn,
@@ -505,7 +600,8 @@ async skip(progress: Progress, data: Scenario) {
         questionId: data.id,
         choiceId: "SKIP" as const,
         result: "SKIP",
-        xpGain: 0
+        xpGain: 0,
+        coinGain
       }
     ]
   }
@@ -516,6 +612,7 @@ async skip(progress: Progress, data: Scenario) {
 
   return {
     updated,
+    coinGain,
     forceEnd,
     trigger: "SKIP"
   }
