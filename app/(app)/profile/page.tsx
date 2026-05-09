@@ -179,11 +179,16 @@ export default function ProfilePage() {
                 if (node.type !== "stage") return
 
                 // ❌ khóa hoặc đã qua thì chặn cứng
-                if (state.status === "locked" || state.status === "passed") return
+                if (state.status === "locked") return
 
                 // 🔥 chỉ cho current stage
                 if (state.status === "current") {
                   router.push(`/game?stageId=${node.stage.id}&mode=play`)
+                  return
+                }
+
+                if (state.status === "passed") {
+                  router.push(`/game?stageId=${node.stage.id}&mode=replay`)
                 }
               }}
             >
@@ -211,7 +216,7 @@ export default function ProfilePage() {
               {/* DAY LABEL */}
               {node.type === "day" && (
                 <div className="label">
-                  Day {node.day.order}
+                  Ngày {node.day.order}
                   <small>{node.day.name}</small>
                 </div>
               )}
@@ -220,6 +225,8 @@ export default function ProfilePage() {
               {node.type === "stage" && (
                 <div className="stageLabel">
                   {node.stage.name}
+                  {state.status === "passed" && <small>Ôn lại</small>}
+                  {state.status === "current" && <small>Tiếp tục</small>}
                 </div>
               )}
 

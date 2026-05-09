@@ -2,8 +2,35 @@
 .profile {
   height: 100vh;
   overflow: hidden;
-  background: var(--bg);
+  position: relative;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(34,197,94,0.14), transparent 28%),
+    radial-gradient(circle at 84% 18%, rgba(14,165,233,0.12), transparent 30%),
+    linear-gradient(180deg, var(--bg), var(--surface-strong));
   color: var(--text);
+}
+
+.profile::before,
+.profile::after {
+  content: "";
+  position: absolute;
+  inset: 70px 0 0;
+  pointer-events: none;
+}
+
+.profile::before {
+  opacity: 0.34;
+  background:
+    linear-gradient(120deg, transparent 0 42%, rgba(34,197,94,0.18) 42% 43%, transparent 43%),
+    linear-gradient(60deg, transparent 0 55%, rgba(99,102,241,0.14) 55% 56%, transparent 56%),
+    repeating-linear-gradient(90deg, rgba(148,163,184,0.08) 0 1px, transparent 1px 92px);
+}
+
+.profile::after {
+  opacity: 0.2;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(34,197,94,0.28), transparent 58%),
+    repeating-linear-gradient(135deg, transparent 0 28px, rgba(15,23,42,0.08) 28px 29px);
 }
 
 /* ===== HEADER ===== */
@@ -135,6 +162,7 @@
 .mapWrapper {
   isolation: isolate;
   position: relative;
+  z-index: 1;
   height: calc(100vh - 70px);
   overflow-y: auto;
   scrollbar-width: thin;
@@ -144,7 +172,9 @@
   scroll-behavior: smooth;
 
   /* 🔥 match background */
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 50% 0, rgba(255,255,255,0.28), transparent 26%),
+    transparent;
 }
 
 /* ===== SCROLLBAR (CHROME / EDGE / SAFARI) ===== */
@@ -282,6 +312,10 @@
   justify-content: center;
 }
 
+.node.stage.passed {
+  cursor: pointer;
+}
+
 
 
 /* ===== ICON ===== */
@@ -321,12 +355,11 @@
 
 
 .node.passed .icon {
-  pointer-events: none;
-  cursor: not-allowed;
+  cursor: pointer;
 
   /* 👇 giảm độ nổi nhưng vẫn giữ màu "đã hoàn thành" */
-  opacity: 0.55;
-  filter: grayscale(0.4) saturate(0.8);
+  opacity: 0.82;
+  filter: saturate(0.95);
 
   background: linear-gradient(
     135deg,
@@ -494,6 +527,20 @@
   overflow: hidden;
 
   opacity: 0.95;
+}
+
+.stageLabel small {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+.node.passed:hover .icon {
+  transform: scale(1);
+  filter: saturate(1.1);
 }
 
 

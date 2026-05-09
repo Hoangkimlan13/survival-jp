@@ -45,6 +45,7 @@ export function generatePathsByDay(nodes: MapNode[]) {
 /* ================= FIX MISSING FUNCTION ================= */
 export function getNodeState(node: MapNode, progress: any, days: Day[]) {
   const currentDay = days.find(d => d.id === progress.dayId)
+  const currentStage = currentDay?.stages.find(s => s.id === progress.stageId)
 
   const isStage = node.type === "stage"
 
@@ -54,7 +55,7 @@ export function getNodeState(node: MapNode, progress: any, days: Day[]) {
       node.day.order < (currentDay?.order ?? 0) ||
       (
         node.day.order === currentDay?.order &&
-        node.stage.order < progress.stageId
+        node.stage.order < (currentStage?.order ?? 0)
       )
     )
 
@@ -70,6 +71,7 @@ export function getNodeState(node: MapNode, progress: any, days: Day[]) {
       : "locked",
 
     isCurrent,
-    canEnter: isPassed || isCurrent
+    canEnter: isPassed || isCurrent,
+    isReplayable: isPassed
   }
 }

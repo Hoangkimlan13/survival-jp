@@ -9,6 +9,11 @@ import { MAX_HP, HP_RECOVERY_PER_STAGE } from "@/src/game/constants"
 import { playStorySound, playEndingSound, playFinalSound } from "@/src/game/sound"
 import type { Choice, LoadResult, Scenario, Stage } from "@/src/game/types"
 
+type DayWithStages = {
+  id: number
+  stages?: Stage[]
+}
+
 /* ================= UTILS ================= */
 
 function unwrapQuestion(q: LoadResult): Scenario | null {
@@ -38,7 +43,13 @@ function isErrorResult(value: unknown): value is { type: "error"; message: strin
 
 /* ================= HOOK ================= */
 
-export function useGame() {
+type UseGameOptions = {
+  mode?: "play" | "replay"
+  replayStageId?: number | null
+}
+
+export function useGame(options: UseGameOptions = {}) {
+  const isReplay = options.mode === "replay" && Boolean(options.replayStageId)
   const [progress, setProgressState] = useState<Progress | null>(null)
   const [current, setCurrent] = useState<Scenario | null>(null)
   const [selected, setSelected] = useState<Choice | null>(null)
@@ -57,6 +68,18 @@ export function useGame() {
   const lock = useRef(false)
 
   const [prevStreak, setPrevStreak] = useState(0)
+
+  const finishReplay = () => {
+    cache.clearScenarios()
+    cache.clearStages()
+    setEvent({
+      type: "replayComplete",
+      data: {
+        title: "Luyện tập hoàn tất",
+        message: "Bạn đã ôn lại màn này. Ôn lại để luyện tập, không cộng XP, tiền hoặc level."
+      }
+    })
+  }
 
   const loadQuestionPair = async (p: Progress, excludeIds: number[] = []) => {
     const q1 = await engine.loadQuestion(p, {
@@ -98,7 +121,48 @@ export function useGame() {
     const init = async () => {
       let p = getProgress()
 
-      if (!p || !Array.isArray(p.pool) || p.pool.length === 0) {
+      if (isReplay && options.replayStageId) {
+        const days = await api.getAllDaysWithStages()
+        const day = Array.isArray(days)
+          ? (days as DayWithStages[]).find((item) =>
+              item.stages?.some((stage: Stage) => Number(stage.id) === Number(options.replayStageId))
+            )
+          : null
+        const stage = day?.stages?.find((item: Stage) =>
+          Number(item.id) === Number(options.replayStageId)
+        )
+
+        if (!day || !stage) {
+          console.error("[REPLAY INIT FAILED] Stage not found", options.replayStageId)
+          return
+        }
+
+        p = {
+          ...p,
+          dayId: day.id,
+          stageId: stage.id,
+          stageOrder: stage.order,
+          stageName: stage.name,
+          turn: 1,
+          hp: MAX_HP,
+          streak: 0,
+          history: [],
+          pool: [],
+          stageGoal: 0,
+          event: null
+        }
+
+        const initRes = await engine.init(p, { persist: false })
+
+        if (!initRes || isErrorResult(initRes)) {
+          console.error("[REPLAY INIT FAILED]", initRes)
+          return
+        }
+
+        p = initRes
+      }
+
+      if (!isReplay && (!p || !Array.isArray(p.pool) || p.pool.length === 0)) {
         const initRes = await engine.init()
 
         // 🧨 FIX CỐT LÕI: đảm bảo không lấy error object
@@ -118,7 +182,7 @@ export function useGame() {
 
       /* ===== restore event ===== */
 
-      if (p.event) {
+      if (!isReplay && p.event) {
         setProgressState(p)
         setEvent(p.event)
         return
@@ -126,7 +190,7 @@ export function useGame() {
 
       /* ===== fix stuck stage ===== */
 
-      if (p.turn >= p.stageGoal) {
+      if (!isReplay && p.turn >= p.stageGoal) {
         const next = await engine.next(p)
 
         if ("type" in next) {
@@ -154,8 +218,12 @@ export function useGame() {
 
     return () => {
       mounted = false
+      if (isReplay) {
+        cache.clearScenarios()
+        cache.clearStages()
+      }
     }
-  }, [])
+  }, [isReplay, options.replayStageId])
 
   /* ================= ANSWER ================= */
 
@@ -164,7 +232,10 @@ export function useGame() {
 
     setPhase("answering")
 
-    const res = await engine.answer(progress, current, choice)
+    const res = await engine.answer(progress, current, choice, {
+      persist: !isReplay,
+      rewards: !isReplay
+    })
 
     setXpGain(res.xpGain || 0)
     setCoinGain(res.coinGain || 0)
@@ -178,6 +249,11 @@ export function useGame() {
     /* ===== END STAGE ===== */
 
     if (res.forceEnd) {
+      if (isReplay) {
+        finishReplay()
+        return
+      }
+
       const next = await engine.next(res.updated)
 
       if ("type" in next) {
@@ -233,7 +309,10 @@ const skip = async () => {
   setSkipEffect(true)
   setTimeout(() => setSkipEffect(false), 300)
 
-  const res = await engine.skip(progress, current)
+  const res = await engine.skip(progress, current, {
+    persist: !isReplay,
+    rewards: !isReplay
+  })
   const skipCoinGain = res.coinGain || 0
 
   // 🔥 mark câu hiện tại là used (CỰC QUAN TRỌNG)
@@ -253,7 +332,9 @@ const skip = async () => {
   }
 
   setProgressState(damaged)
-  setProgress(damaged)
+  if (!isReplay) {
+    setProgress(damaged)
+  }
   setXpGain(0)
   setCoinGain(skipCoinGain)
   setLeveledUp(false)
@@ -261,6 +342,11 @@ const skip = async () => {
 
   /* ===== END STAGE ===== */
   if (res.forceEnd) {
+    if (isReplay) {
+      finishReplay()
+      return
+    }
+
     const next = await engine.next(damaged)
 
     if ("type" in next) {
@@ -294,6 +380,46 @@ const skip = async () => {
 
   const next = async () => {
     if (!progress) return
+
+    if (event?.type === "replayComplete") {
+      cache.clearScenarios()
+      cache.clearStages()
+      window.location.href = "/profile"
+      return
+    }
+
+    if (isReplay) {
+      setPhase("transition")
+
+      const upcoming = nextRef.current
+
+      if (!upcoming || upcoming.id === current?.id) {
+        if (progress.turn > progress.stageGoal) {
+          finishReplay()
+          return
+        }
+
+        const pair = await loadQuestionPair(progress, current?.id ? [current.id] : [])
+        if (!pair) {
+          finishReplay()
+          return
+        }
+
+        setProgressState(progress)
+        setCurrent(pair.current)
+        nextRef.current = pair.next
+        preloadRef.current = null
+      } else {
+        setProgressState(progress)
+        setCurrent(upcoming)
+        nextRef.current = preloadRef.current
+        preloadRef.current = null
+      }
+
+      setSelected(null)
+      setPhase("idle")
+      return
+    }
 
     /* ===== HANDLE EVENT ===== */
 
@@ -489,6 +615,7 @@ const skip = async () => {
     coinGain,
     leveledUp,
     skipEffect,
-    prevStreak
+    prevStreak,
+    isReplay
   }
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getProgress, type ProgressLog } from "@/lib/progress"
+import { unlockAudioContext } from "@/src/game/sound"
 
 type ThemeMode = "system" | "dark" | "light"
 
@@ -210,17 +211,6 @@ export default function HomePage() {
     setSound(saved === "on")
   }, [])
 
-  useEffect(() => {
-    const unlock = () => {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
-      ctx.resume()
-    }
-
-    window.addEventListener("click", unlock, { once: true })
-
-    return () => window.removeEventListener("click", unlock)
-  }, [])
-
   // ===== APPLY THEME =====
   const applyTheme = (mode: ThemeMode) => {
     const systemDark = window.matchMedia(
@@ -410,6 +400,7 @@ export default function HomePage() {
               const newVal = !sound
               setSound(newVal)
               localStorage.setItem("sound", newVal ? "on" : "off")
+              if (newVal) void unlockAudioContext()
             }}
           >
             <span className="material-symbols-rounded">

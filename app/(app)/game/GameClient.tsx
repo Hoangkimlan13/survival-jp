@@ -1,20 +1,27 @@
 "use client"
 
-import { useState, useEffect } from "react" // ✅ thêm useEffect
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import GameScreen from "@/src/game/ui/GameScreen"
 import { useGame } from "@/src/game/hooks/useGame"
 import { useGameView } from "@/src/game/view/useGameView"
 
 export default function GameClient() {
-  const game = useGame()
+  const searchParams = useSearchParams()
+  const mode = searchParams.get("mode") === "replay" ? "replay" : "play"
+  const replayStageId = Number(searchParams.get("stageId") || 0) || null
+
+  const game = useGame({ mode, replayStageId })
   const view = useGameView(game)
 
   const [showTranslate, setShowTranslate] = useState(false)
 
-  // RESET khi sang câu mới
   useEffect(() => {
     if (!view.current?.id) return
-    setShowTranslate(false)
+
+    queueMicrotask(() => {
+      setShowTranslate(false)
+    })
   }, [view.current?.id])
 
   return (
@@ -27,15 +34,16 @@ export default function GameClient() {
       xpGain={view.xpGain}
       coinGain={view.coinGain}
       leveledUp={view.leveledUp}
+      isReplay={view.isReplay}
       isLocked={view.isLocked}
       canAnswer={view.canAnswer}
       onAnswer={view.answer}
       onNext={view.next}
-      onSkip={game.skip}          
-      skipEffect={game.skipEffect} 
+      onSkip={game.skip}
+      skipEffect={game.skipEffect}
       showTranslate={showTranslate}
       setShowTranslate={setShowTranslate}
-      prevStreak={game.prevStreak}  
+      prevStreak={game.prevStreak}
     />
   )
 }

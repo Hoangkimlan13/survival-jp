@@ -6,7 +6,7 @@ import SpeakButton from "@/src/components/SpeakButton"
 import { useEffect, useRef, useState } from "react"
 import { api } from "@/src/game/api"
 import { getSmartMessage } from "@/src/game/utils"
-import { preloadAudioContext } from "@/src/game/sound"
+import { preloadAudioContext, unlockAudioContext } from "@/src/game/sound"
 import { getLevelProgress, getRankName } from "@/src/game/config"
 
 /* ================= COMPONENT ================= */
@@ -28,6 +28,7 @@ export default function GameScreen({
   xpGain,
   coinGain = 0,
   leveledUp = false,
+  isReplay = false,
   prevStreak,
 }: any) {
 
@@ -46,6 +47,7 @@ export default function GameScreen({
 
   /* ================= HP EFFECT ================= */
 
+  
   const [isHit, setIsHit] = useState(false)
 
   useEffect(() => {
@@ -66,64 +68,100 @@ export default function GameScreen({
   const levelInfo = getLevelProgress(progress?.xp ?? 0)
   const rankName = getRankName(progress?.level ?? levelInfo.level)
 
-  /* ================= XP ANIMATION ================= */
+ /* ================= REWARD ANIMATION ================= */
 
   const [xpAnimated, setXpAnimated] = useState(0)
   const [coinAnimated, setCoinAnimated] = useState(0)
-  const xpRef = useRef<any>(null)
-  const coinRef = useRef<any>(null)
+
+  function easeOutExpo(t: number) {
+    return t === 1
+      ? 1
+      : 1 - Math.pow(2, -10 * t)
+  }
 
   useEffect(() => {
-    if (xpRef.current) clearInterval(xpRef.current)
+    if (phase !== "result") return
 
-    if (!xpGain) {
-      setXpAnimated(0)
-      return
+    let xpFrame = 0
+    let coinFrame = 0
+
+    const xpDuration = 650
+    const coinDuration = 950
+
+    const xpStart = performance.now()
+
+    const xpTarget = xpGain || 0
+    const coinTarget = coinGain || 0
+
+    function easeOutExpo(t: number) {
+      return t === 1
+        ? 1
+        : 1 - Math.pow(2, -10 * t)
     }
 
-    let value = 0
-    const step = Math.max(1, Math.ceil(xpGain / 20))
+    /* ===== RESET ===== */
 
-    xpRef.current = setInterval(() => {
-      value += step
+    setXpAnimated(0)
+    setCoinAnimated(0)
 
-      if (value >= xpGain) {
-        value = xpGain
-        clearInterval(xpRef.current)
+    /* ===== XP ===== */
+
+    const animateXp = (now: number) => {
+      const elapsed = now - xpStart
+
+      const progress = Math.min(
+        elapsed / xpDuration,
+        1
+      )
+
+      const eased = easeOutExpo(progress)
+
+      setXpAnimated(
+        Math.round(xpTarget * eased)
+      )
+
+      if (progress < 1) {
+        xpFrame = requestAnimationFrame(animateXp)
       }
-
-      setXpAnimated(value)
-    }, 16)
-
-    return () => clearInterval(xpRef.current)
-  }, [xpGain])
-
-  useEffect(() => {
-    if (coinRef.current) clearInterval(coinRef.current)
-
-    if (!coinGain) {
-      setCoinAnimated(0)
-      return
     }
 
-    const sign = coinGain < 0 ? -1 : 1
-    const target = Math.abs(coinGain)
-    let value = 0
-    const step = Math.max(1, Math.ceil(target / 12))
+    /* ===== COIN ===== */
 
-    coinRef.current = setInterval(() => {
-      value += step
+    const coinDelay = 140
 
-      if (value >= target) {
-        value = target
-        clearInterval(coinRef.current)
+    const animateCoin = (now: number) => {
+      const elapsed = now - xpStart - coinDelay
+
+      if (elapsed < 0) {
+        coinFrame = requestAnimationFrame(animateCoin)
+        return
       }
 
-      setCoinAnimated(value * sign)
-    }, 18)
+      const progress = Math.min(
+        elapsed / coinDuration,
+        1
+      )
 
-    return () => clearInterval(coinRef.current)
-  }, [coinGain])
+      const eased = easeOutExpo(progress)
+
+      setCoinAnimated(
+        Math.round(coinTarget * eased)
+      )
+
+      if (progress < 1) {
+        coinFrame = requestAnimationFrame(animateCoin)
+      }
+    }
+
+    xpFrame = requestAnimationFrame(animateXp)
+    coinFrame = requestAnimationFrame(animateCoin)
+
+    return () => {
+      cancelAnimationFrame(xpFrame)
+      cancelAnimationFrame(coinFrame)
+    }
+  }, [phase, currentTurn])
+
 
   /* ================= AUTO SCROLL ================= */
 
@@ -294,6 +332,34 @@ export default function GameScreen({
     )
   }
 
+  if (event?.type === "replayComplete") {
+    return (
+      <div className={styles.endingScreen}>
+        <div className={styles.endingCard}>
+          <div className={styles.practiceBadge}>Ôn lại</div>
+
+          <h1 className={styles.endingTitle}>
+            {event.data?.title || "Luyện tập hoàn tất"}
+          </h1>
+
+          <p className={styles.endingMessage}>
+            {event.data?.message || "Bạn đã ôn lại màn này. Ôn tập lại không cộng XP, tiền hoặc level."}
+          </p>
+
+          <div className={styles.practiceNote}>
+            Không cộng XP · Không cộng tiền · Không đổi tiến trình chính
+          </div>
+
+          <div className={styles.endingActions}>
+            <button className={styles.nextBtn} onClick={onNext}>
+              Về hồ sơ
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   /* ================= LOADING ================= */
 
  if (!progress || !safeCurrent) {
@@ -312,40 +378,37 @@ export default function GameScreen({
 
   /* ================= HP ================= */
 
-  const MAX_HP = 5
-  const hp = progress.hp ?? MAX_HP
-  const hpRatio = hp / MAX_HP
-  const isCritical = hp <= 1
-  const isLow = hp <= 2
- 
-  const status =
-  isCritical
-    ? `${styles.danger} ${styles.critical}`
-    : isLow
-    ? styles.warning
-    : styles.normal
+  /* ================= HP LOGIC ================= */
+  const MAX_HP = 5;
+  const hp = progress.hp ?? MAX_HP;
+  const hpRatio = hp / MAX_HP;
 
+  // Trạng thái nguy kịch (dưới 25% hoặc còn 1 máu)
+  const isCritical = hp <= 1; 
+
+  // Gộp các class trạng thái
+  const statusClass = isCritical ? `${styles.critical} ${styles.danger}` : styles.normal;
+
+  // Hàm lấy mặt (giữ nguyên logic của bạn nhưng bọc trong statusClass)
   const getFace = () => {
-    if (hp <= 0) return "💀"
-
-    if (hp <= 1) {
-      return progress.streak >= 4 ? "😵‍💫" : "😵"
-    }
-
-    if (hp <= 2) return "😰"
-
-    if (progress.streak >= 6) return "🔥"
-    if (progress.streak >= 4) return "😎"
-
-    if (hp === MAX_HP) return "😄"
-
-    return "🙂"
-  }
+    if (hp <= 0) return "💀";
+    if (hp <= 1) return progress.streak >= 4 ? "😵‍💫" : "😵";
+    if (hp <= 2) return "😰";
+    if (progress.streak >= 6) return "🔥";
+    if (progress.streak >= 4) return "😎";
+    if (hp === MAX_HP) return "😄";
+    return "🙂";
+  };
 
   /* ================= RENDER ================= */
 
   return (
-    <div className={`${styles.game} ${isLocked ? styles.locked : ""}`}>
+    <div
+      className={`${styles.game} ${isLocked ? styles.locked : ""}`}
+      onPointerDownCapture={() => {
+        void unlockAudioContext()
+      }}
+    >
 
     {/* HEADER */}
     <div className={styles.hudShell}>
@@ -353,6 +416,7 @@ export default function GameScreen({
       {/* TOP */}
       <div className={styles.topBar}>
 
+        {/* LEFT */}
         <button
           className={styles.homeBtn}
           onClick={() => window.location.href = "/"}
@@ -365,83 +429,99 @@ export default function GameScreen({
         <div className={styles.stageInfo}>
 
           <div className={styles.dayLabel}>
-            DAY {dayMeta?.order ?? progress.dayId}
+            {/* Phần text hiển thị: Ngày + Order + Tên */}
+            <span className={styles.dayText}>
+              Ngày {dayMeta?.order ?? progress.dayId}
+              {dayMeta?.name && `: ${dayMeta.name}`}
+            </span>
+            
+            {/* Label ôn lại nếu có */}
+            {isReplay && (
+              <span className={styles.replayPill}>Ôn lại</span>
+            )}
           </div>
 
           <div className={styles.stageTitle}>
-            {progress.stageName || `Stage ${progress.stageId}`}
+            Màn: {progress.stageName || `Stage ${progress.stageId}`}
           </div>
 
           <div className={styles.stageSub}>
-            Nhật sinh tồn • Câu {currentTurn}/{progress.stageGoal}
+            Câu {currentTurn}/{progress.stageGoal}
           </div>
 
         </div>
 
+        {/* RIGHT - compact player */}
+        {/* RIGHT - compact player */}
         <div className={styles.playerMini}>
 
-          <div className={styles.levelBadge}>
-            Lv {progress.level}
-            <small>{rankName}</small>
+          <div className={styles.playerTop}>
+            <span className={styles.levelText}>
+              Lv {progress.level}
+            </span>
+
+            <span className={styles.rankMini}>
+              {rankName}
+            </span>
+          </div>
+
+          {/* XP BAR INSIDE PLAYER */}
+          <div className={styles.xpTrackWrapper}>
+
+            <div className={styles.levelTrack}>
+              <div
+                className={styles.levelFill}
+                style={{
+                  width: `${levelInfo.ratio * 100}%`
+                }}
+              />
+            </div>
+
           </div>
 
           <div className={styles.resourceRow}>
-
             <div className={styles.coinBadge}>
-              ¥ {progress.coins}
+              <span className="material-symbols-rounded">payments</span>
+               {progress.coins}
             </div>
 
             <div className={styles.xpBadge}>
               ⭐ {progress.xp}
             </div>
-
           </div>
 
         </div>
 
       </div>
 
-      {/* XP TRACK */}
-      <div className={styles.levelTrack}>
-        <div
-          className={styles.levelFill}
-          style={{
-            width: `${levelInfo.ratio * 100}%`
-          }}
-        />
-      </div>
 
       {/* SURVIVAL HUD */}
-      <div className={`${styles.survivalHUD} ${status}`}>
-
-        <div className={styles.hudTop}>
-
-          <div
-            className={`${styles.hpTrack} ${
-              isHit || skipEffect
-                ? styles.damageFlash
-                : ""
-            }`}
-          >
+      <div className={`${styles.survivalHUD} ${statusClass}`}>
+        <div className={styles.hudRow}>
+          <span className={styles.hudLabel}>Tâm trạng</span>
+          
+          <div className={`${styles.hpTrack} ${isHit || skipEffect ? styles.damageFlash : ""}`}>
             <div
               className={styles.hpFill}
-              style={{
-                width: `${hpRatio * 100}%`
+              style={{ 
+                width: `${hpRatio * 100}%`,
+                // Mẹo: Giữ kích thước gradient cố định so với Track cha
+                backgroundSize: `${(1 / (hpRatio || 0.1)) * 100}% 100%`,
+                backgroundPosition: 'left center'
               }}
             />
+            
+            <div
+              className={styles.faceFloat}
+              style={{ 
+                // Dùng clamp để giới hạn mặt không lòi ra khỏi bo góc của thanh bar
+                left: `calc(clamp(10px, ${hpRatio * 100}%, calc(100% - 10px)))` 
+              }}
+            >
+              {getFace()}
+            </div>
           </div>
-
-          <div
-            className={styles.faceFloat}
-            style={{
-              left: `calc(${hpRatio * 100}% - 10px)`
-            }}
-          >
-            {getFace()}
-          </div>
-
         </div>
-
       </div>
 
     </div>
@@ -588,25 +668,49 @@ export default function GameScreen({
               {selected.feedback}
             </div>
 
-            <div className={styles.rewardPanel}>
-              <div className={styles.rewardItem}>
-                <span>XP</span>
-                <strong>⭐ +{xpAnimated}</strong>
-              </div>
+            {!isReplay && (
+              <div className={styles.rewardPanel}>
+                <div className={styles.rewardItem}>
+                  <span>XP</span>
+                  <strong>
+                    ⭐ +{xpAnimated.toLocaleString()}
+                  </strong>
+                </div>
 
-              <div className={`${styles.rewardItem} ${coinAnimated < 0 ? styles.rewardPenalty : ""}`}>
-                <span>Tiền</span>
-                <strong>
-                  ¥ {coinAnimated > 0 ? `+${coinAnimated}` : coinAnimated}
-                </strong>
-              </div>
-            </div>
-
-            {leveledUp && (
-              <div className={styles.levelUp}>
-                Lên Lv {progress.level} · {rankName}
+                <div className={`${styles.rewardItem} ${coinAnimated < 0 ? styles.rewardPenalty : ""}`}>
+                  <span>Tiền</span>
+                  <strong>
+                    ¥ {
+                      coinAnimated > 0
+                        ? `+${coinAnimated.toLocaleString()}`
+                        : coinAnimated.toLocaleString()
+                    }
+                  </strong>
+                </div>
               </div>
             )}
+
+            {isReplay && (
+              <div className={styles.practiceNote}>
+                Ôn lại để luyện tập, không cộng XP, tiền hoặc level.
+              </div>
+            )}
+
+           {leveledUp && (
+            <div className={styles.levelUp}>
+              <div className={styles.levelLabel}>
+                LEVEL UP
+              </div>
+
+              <div className={styles.levelValue}>
+                Lv {progress.level}
+              </div>
+
+              <div className={styles.rankName}>
+                {rankName}
+              </div>
+            </div>
+          )}
 
             <button
               className={styles.nextBtn}

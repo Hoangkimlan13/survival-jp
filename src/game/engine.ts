@@ -149,6 +149,11 @@ type LoadQuestionOptions = {
   disableCache?: boolean
 }
 
+type ProgressWriteOptions = {
+  persist?: boolean
+  rewards?: boolean
+}
+
 /* ================= AI SYSTEM ================= */
 
 function getDifficulty(progress: Progress) {
@@ -259,7 +264,11 @@ export const engine = {
 
   /* ================= INIT ================= */
 
-  async init(customProgress?: Progress): Promise<Progress> {
+  async init(
+    customProgress?: Progress,
+    options: ProgressWriteOptions = {}
+  ): Promise<Progress> {
+    const persist = options.persist ?? true
     let progress = customProgress ?? getProgress()
 
     if (!progress) {
@@ -351,7 +360,9 @@ export const engine = {
       history: progress.history || []
     }
 
-    setProgress(updated)
+    if (persist) {
+      setProgress(updated)
+    }
 
     queueMicrotask(() => {
       this.preload(updated)
@@ -473,11 +484,18 @@ export const engine = {
 
   /* ================= ANSWER ================= */
 
-  async answer(progress: Progress, data: Scenario, choice: Choice) {
+  async answer(
+    progress: Progress,
+    data: Scenario,
+    choice: Choice,
+    options: ProgressWriteOptions = {}
+  ) {
+    const persist = options.persist ?? true
+    const rewards = options.rewards ?? true
     const quality: ChoiceQuality = choice.quality ?? "OK"
 
-    const xpGain = QUALITY_SCORE[quality]
-    const coinGain = QUALITY_COINS[quality]
+    const xpGain = rewards ? QUALITY_SCORE[quality] : 0
+    const coinGain = rewards ? QUALITY_COINS[quality] : 0
     const result = QUALITY_RESULT[quality] as ProgressLog["result"]
 
     /* EFFECT */
@@ -548,7 +566,9 @@ export const engine = {
 
     const forceEnd = nextTurn > progress.stageGoal
 
-    setProgress(updated)
+    if (persist) {
+      setProgress(updated)
+    }
 
     return {
       updated,
@@ -566,7 +586,13 @@ export const engine = {
 
 /* ================= SKIP ================= */
 
-async skip(progress: Progress, data: Scenario) {
+async skip(
+  progress: Progress,
+  data: Scenario,
+  options: ProgressWriteOptions = {}
+) {
+  const persist = options.persist ?? true
+  const rewards = options.rewards ?? true
 
   playSkip()
 
@@ -583,7 +609,7 @@ async skip(progress: Progress, data: Scenario) {
   const newHp = Math.max(0, progress.hp - hpLoss)
 
   const nextTurn = progress.turn + 1
-  const coinGain = -1
+  const coinGain = rewards ? -1 : 0
   const nextCoins = Math.max(0, (progress.coins ?? 0) + coinGain)
 
   const updated: Progress = {
@@ -608,7 +634,9 @@ async skip(progress: Progress, data: Scenario) {
 
   const forceEnd = nextTurn > progress.stageGoal
 
-  setProgress(updated)
+  if (persist) {
+    setProgress(updated)
+  }
 
   return {
     updated,
