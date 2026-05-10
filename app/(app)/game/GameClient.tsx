@@ -44,6 +44,7 @@ export default function GameClient() {
       showTranslate={showTranslate}
       setShowTranslate={setShowTranslate}
       prevStreak={game.prevStreak}
+      isLoadingQuestion={game.isLoadingQuestion}
     />
   )
 }

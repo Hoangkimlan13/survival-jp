@@ -57,6 +57,7 @@ export function useGame(options: UseGameOptions = {}) {
     "idle" | "answering" | "result" | "transition"
   >("idle")
 
+  const [isLoadingQuestion, setIsLoadingQuestion] = useState(false)
   const [event, setEvent] = useState<GameEvent | null>(null)
   const [xpGain, setXpGain] = useState(0)
   const [coinGain, setCoinGain] = useState(0)
@@ -455,6 +456,8 @@ const skip = async () => {
         localStorage.removeItem("game_event")
 
         // ✅ FIX QUAN TRỌNG
+        setIsLoadingQuestion(true)
+        
         const fresh = await engine.init(newProgress)
 
         const pair = await loadQuestionPair(fresh)
@@ -468,6 +471,7 @@ const skip = async () => {
         setSelected(null)
         setPhase("idle")
 
+        setIsLoadingQuestion(false)
         setTimeout(() => setXpGain(0), 500)
         setTimeout(() => setCoinGain(0), 500)
         setLeveledUp(false)
@@ -616,6 +620,7 @@ const skip = async () => {
     leveledUp,
     skipEffect,
     prevStreak,
-    isReplay
+    isReplay,
+    isLoadingQuestion,
   }
 }

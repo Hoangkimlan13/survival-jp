@@ -1,6 +1,5 @@
 /* ===== ROOT ===== */
 .profile {
-  height: 100vh;
   overflow: hidden;
   position: relative;
   background:
@@ -37,187 +36,361 @@
 .profileHeader {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: 100;
+  padding: 12px 16px 14px;
+  
+  /* Sử dụng biến hệ thống của bạn để tự đổi màu */
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* Viền mảnh tự thích ứng theo Dark/Light */
+  border-bottom: 1px solid var(--border);
+  
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
+.systemBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-
-  padding: 14px 16px;
-
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(14px);
-
-  border-bottom: 1px solid var(--border);
 }
 
-.dark .profileHeader {
-  background: rgba(19, 28, 47, 0.65);
-  backdrop-filter: blur(16px);
-}
-
-/* ===== BACK BUTTON ===== */
-.backBtn {
-  width: 40px;
-  height: 40px;
-
-  border-radius: 12px;
-  border: 1px solid var(--border);
-
-  background: var(--surface);
+.compactBackBtn {
+  all: unset;
   color: var(--text);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.backBtn:hover {
-  transform: scale(1.05);
-  background: var(--surface-strong);
-}
-
-/* ===== CENTER INFO ===== */
-.headerInfo {
-  flex: 1;
-  text-align: center;
-}
-
-.headerInfo h1 {
-  font-size: 16px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  letter-spacing: -0.2px;
-}
-
-.headerInfo p {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: var(--muted);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.dot {
-  opacity: 0.4;
-}
-
-/* ===== ICONS SMALL ===== */
-.material-icons.tiny {
-  font-size: 14px;
   opacity: 0.7;
+  cursor: pointer;
+  display: flex;
 }
 
-/* ===== STAT BADGES ===== */
-.profileStats {
+.statusGroup {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 6px;
+  gap: 14px;
 }
 
-.xpBadge,
-.coinBadge,
-.levelBadge {
+.statItem {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
+  gap: 4px;
+  font-family: var(--font-ui);
   font-size: 12px;
+  font-weight: 800;
+  height: 28px;
+  background: var(--surface-strong);
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+}
+
+
+.money {
+  color: #FFC857;
+  text-shadow: 0 0 12px rgba(255, 200, 87, 0.35);
+}
+.money .material-symbols-rounded {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.energy { 
+  color: #67D8FF;
+  text-shadow: 0 0 10px rgba(103, 216, 255, 0.3);
+}
+
+.energ .material-symbols-rounded {
+  font-size: 20px;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  /* Hiệu ứng lấp lánh nhẹ cho XP */
+  filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5));
+}
+
+
+/* Level Hexagon: Sử dụng màu Primary của hệ thống */
+/* Container chứa cả cụm Level & Rank */
+.levelEmblem {
+  display: flex;
+  align-items: center;
+  background: var(--surface-strong); /* Nền nhẹ để tách biệt cụm Rank */
+  padding: 2px 8px 2px 2px;
+  border-radius: 8px 20px 20px 8px; /* Bo tròn kiểu thẻ quân đội */
+  border: 1px solid var(--border-strong);
+  gap: 8px;
+  height: 32px;
+}
+
+/* Hexagon chứa số Level */
+.levelHex {
+  width: 24px;
+  height: 28px;
+  background: var(--primary);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  box-shadow: 0 0 12px rgba(139, 129, 255, 0.4);
+}
+
+.lvNum {
+  color: #fff;
+  font-weight: 900;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Phần chữ Rank bên cạnh */
+.rankInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1;
+}
+
+.rankLabel {
+  font-size: 7px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 1px;
+  margin-bottom: 1px;
+}
+
+.rankName {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  white-space: nowrap; /* Không cho xuống dòng */
+}
+
+/* Tinh chỉnh lại các chỉ số tiền/xp cho cân bằng */
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
 }
 
-.xpBadge {
-  background: linear-gradient(135deg, var(--primary), var(--info));
-  color: white;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+.statItem .material-symbols-rounded {
+  font-size: 18px;
 }
 
-.coinBadge {
-  color: #92400e;
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border: 1px solid rgba(245,158,11,0.25);
+/* Hiệu ứng cho Dark Mode */
+.dark .levelEmblem {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
-.levelBadge {
-  color: white;
-  background: linear-gradient(135deg, var(--success), var(--primary));
+/* Title Section: Hiện đại & Sạch */
+.mainTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.levelBadge span {
-  font-size: 10px;
-  opacity: 0.82;
+.titleWrapper h1 {
+  font-family: var(--font-vn);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.statusLine {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.statusDot {
+  width: 4px;
+  height: 4px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.statusTag {
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Progress Module: Tối giản diện tích */
+.progressQuickInfo {
+  display: flex;
+  gap: 6px;
+}
+
+.xpBox {
+  background: var(--surface-strong);
+  border: 1px solid var(--border-strong);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Dark mode tinh chỉnh thêm cho chiều sâu */
+.dark .profileHeader {
+  background: rgba(13, 17, 23, 0.8); /* Giữ độ trong suốt để thấy background động của bạn */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* ===== MAP ===== */
 .mapWrapper {
   isolation: isolate;
   position: relative;
-  z-index: 1;
-  height: calc(100vh - 70px);
+  background-color: var(--bg);
+  height: calc(100vh - 120px);
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(99,102,241,0.4) transparent;
-
-  /* 🔥 smooth scrolling */
+  overflow-x: hidden;
   scroll-behavior: smooth;
-
-  /* 🔥 match background */
-  background:
-    radial-gradient(circle at 50% 0, rgba(255,255,255,0.28), transparent 26%),
-    transparent;
 }
 
-/* ===== SCROLLBAR (CHROME / EDGE / SAFARI) ===== */
+/* ===== SCROLLBAR NÂNG CẤP (THEME SINH TỒN) ===== */
 .mapWrapper::-webkit-scrollbar {
-  width: 10px;
+  width: 6px; /* Làm mỏng lại cho tinh tế */
 }
 
 .mapWrapper::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.1);
+  /* Thêm một đường kẻ mờ ở giữa track để tạo cảm giác đường ray */
+  border-left: 1px solid rgba(255, 255, 255, 0.02);
 }
 
 .mapWrapper::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.25);
-  border-radius: 999px;
-
-  border: 2px solid transparent;
+  /* Màu mặc định: Dùng màu xám kim loại đục */
+  background: rgba(110, 110, 120, 0.4);
+  border-radius: 4px;
+  
+  /* Tạo hiệu ứng viền sắc nét */
+  border: 1px solid rgba(255, 255, 255, 0.05);
   background-clip: padding-box;
-
-  transition: 0.2s;
+  
+  transition: all 0.3s ease;
 }
 
-.mapWrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5);
+/* Khi người dùng đang cuộn hoặc hover vào */
+.mapWrapper::-webkit-scrollbar-thumb:hover,
+.mapWrapper::-webkit-scrollbar-thumb:active {
+  /* Đổi sang màu Primary (Tím/Xanh của bạn) và phát sáng */
+  background: var(--primary);
+  box-shadow: 0 0 10px var(--primary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* ===== DARK MODE ===== */
+/* ===== DARK MODE TINH CHỈNH ===== */
+.dark .mapWrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
 .dark .mapWrapper::-webkit-scrollbar-thumb {
-  background: rgba(139, 129, 255, 0.35);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .dark .mapWrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 129, 255, 0.6);
+  background: var(--primary);
+  /* Hiệu ứng Neon mạnh hơn trong tối */
+  box-shadow: 0 0 15px var(--primary);
 }
+
+
+.oceanBackground {
+  position: absolute;
+  /* Thay inset: 0 bằng cách sau */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%; /* Nó sẽ tự kéo giãn theo container nếu container có nội dung dài */
+  min-height: 2000px; /* Đảm bảo bằng hoặc hơn chiều cao của .mapPath */
+  
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.12; 
+
+  /* Pattern sóng Seigaiha */
+  background-image: 
+    radial-gradient(circle at 100% 150%, transparent 24%, var(--primary) 25%, var(--primary) 28%, transparent 29%, transparent 36%, var(--primary) 36%, var(--primary) 40%, transparent 41%, transparent),
+    radial-gradient(circle at 0% 150%, transparent 24%, var(--primary) 25%, var(--primary) 28%, transparent 29%, transparent 36%, var(--primary) 36%, var(--primary) 40%, transparent 41%, transparent),
+    radial-gradient(circle at 50% 100%, transparent 4%, var(--primary) 4%, var(--primary) 7%, transparent 8%, transparent 14%, var(--primary) 14%, var(--primary) 17%, transparent 18%, transparent 24%, var(--primary) 24%, var(--primary) 27%, transparent 28%, transparent 34%, var(--primary) 34%, var(--primary) 37%, transparent 38%, transparent);
+  background-size: 80px 40px;
+  background-repeat: repeat; /* Đảm bảo sóng lặp lại vô tận */
+  
+  /* Cố định Mask để nó không chạy khi cuộn (Nếu muốn mask luôn ở giữa màn hình) */
+  -webkit-mask-image: radial-gradient(circle, transparent 20%, black 80%);
+  mask-image: radial-gradient(circle, transparent 20%, black 80%);
+  mask-attachment: fixed; 
+  -webkit-mask-attachment: fixed;
+
+  animation: waveDrift 120s linear infinite;
+}
+
+@keyframes waveDrift {
+  from { background-position: 0 0; }
+  to { background-position: 1000px 1000px; }
+}
+.dark .oceanBackground {
+  opacity: 0.08; /* Trong dark mode giảm thêm để nhìn sâu thẳm hơn */
+}
+
+
+/* Overlay tạo chiều sâu và tập trung thị giác */
+.mapOverlay {
+  position: sticky; /* Giúp overlay luôn bám theo màn hình khi cuộn map */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1; /* Nằm trên sóng, dưới nodes */
+  
+  /* Tạo quầng sáng trung tâm cố định */
+  background: radial-gradient(circle at 50% 50%, transparent 20%, var(--bg) 100%);
+}
+
+.dark .mapOverlay {
+  background: radial-gradient(circle at 50% 50%, transparent 20%, var(--bg) 100%);
+}
+
+
 
 
 /* ===== PATH ===== */
 .mapPath {
   position: absolute;
-  width: 100%;
-  height: 6000px;
+  inset: 0;
   z-index: 0;
+  width: 100%;
+  height: 2000px; /* Điều chỉnh theo độ dài map */
+}
+
+.mapParticles {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-image: url("https://www.transparenttextures.com/patterns/asfalt-dark.png");
+  opacity: 0.15;
+  mix-blend-mode: soft-light;
   pointer-events: none;
-  opacity: 0.8;
 }
 
 .mapPath path {
@@ -260,7 +433,7 @@
 /* ===== LINE ===== */
 .dayDivider .line {
   flex: 1;
-  height: 1px;
+  height: 1.5px;
 
   background: linear-gradient(
     to right,
@@ -299,332 +472,290 @@
 
 .node {
   position: absolute;
-  left: 0;
-  top: 0;
-
   transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
 
-  width: auto;
-  height: auto;
-
+.iconWrapper {
+  position: relative;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 5;
 }
-
-.node.stage.passed {
-  cursor: pointer;
-}
-
 
 
 /* ===== ICON ===== */
 .node .icon {
-  width: 72px;
-  height: 72px;
-
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  aspect-ratio: 1 / 1;
-
+  background: var(--surface-strong);
+  border: 2px solid var(--border-strong);
+  color: var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
-
-  position: relative;
-  z-index: 3;
-
-  background: linear-gradient(
-    135deg,
-    #58cc02 0%,
-    #46a302 50%,
-    #3c8f01 100%
-  );
-
-  box-shadow:
-    0 0 0 6px rgba(88, 204, 2, 0.12),   /* outer glow ring */
-    0 0 0 14px rgba(88, 204, 2, 0.05),  /* soft aura */
-    0 12px 30px rgba(0, 0, 0, 0.25);
-
-  border: 3px solid rgba(255, 255, 255, 0.25);
+  font-size: 24px;
+  transition: all 0.3s;
+  box-shadow: var(--shadow);
 }
 
 /* ===== STATES ===== */
 .node.current .icon {
+  background: var(--primary);
+  border-color: #fff;
+  color: #fff;
+  font-size: 30px;
   transform: scale(1.1);
+  box-shadow: 0 0 35px rgba(139, 129, 255, 0.7);
+  overflow: hidden; /* Để chứa hiệu ứng shimmer */
 }
 
+/* Hiệu ứng vệt sáng chạy qua node hiện tại */
+.node.current .icon::after {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+  transform: rotate(45deg);
+  animation: shimmerNode 3s infinite;
+}
+
+@keyframes shimmerNode {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
+}
 
 .node.passed .icon {
-  cursor: pointer;
+  /* Gradient xanh lá đậm đến xanh lá tươi để tạo khối, không dùng trong suốt */
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  
+  /* Viền trắng nhẹ hoặc xanh rất nhạt để tách biệt hẳn với nền map */
+  border: 2px solid #bbf7d0; 
+  color: white; /* Đổi icon sang màu trắng cho nổi bật trên nền xanh */
 
-  /* 👇 giảm độ nổi nhưng vẫn giữ màu "đã hoàn thành" */
-  opacity: 0.82;
-  filter: saturate(0.95);
-
-  background: linear-gradient(
-    135deg,
-    #58cc02 0%,
-    #46a302 50%,
-    #2f7a01 100%
-  );
-
-  border-color: rgba(88, 204, 2, 0.6);
-
-  /* 👇 tạo cảm giác "đã khóa nhẹ" */
-  box-shadow:
-    0 0 0 4px rgba(88, 204, 2, 0.12),
-    0 10px 20px rgba(0, 0, 0, 0.25);
-
-  transform: scale(0.92);
-
-  transition: all 0.25s ease;
+  /* Glow mạnh hơn để tạo cảm giác "đã thắp sáng" trạm này */
+  box-shadow: 
+    0 0 20px rgba(34, 197, 94, 0.4),  
+    inset 0 2px 4px rgba(255, 255, 255, 0.3); /* Ánh sáng phản chiếu ở mép trên */
+  
+  transform: scale(0.92); /* Nhỏ hơn current một chút để phân cấp */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10; 
 }
 
-
-.node.locked .icon {
-  background: #2b2f3a;
-  box-shadow:
-    0 0 0 6px rgba(0,0,0,0.2);
-
-  opacity: 0.5;
-  filter: grayscale(1);
+/* Hiệu ứng khi di chuột vào (Hover) */
+.node.passed:hover .icon {
+  transform: scale(1.02);
+  /* Khi hover, icon sẽ rực sáng lên như được nạp năng lượng */
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  box-shadow: 0 0 30px rgba(34, 197, 94, 0.6);
+  filter: brightness(1.1);
 }
 
-/* ===== DAY ===== */
-.node.day .icon {
-  width: 80px;
-  height: 80px;
-  font-size: 30px;
-
-  background: linear-gradient(135deg, var(--info), var(--primary));
-  color: white;
-}
-.node.stage.small .icon {
-  width: 50px;
-  height: 50px;
-  color: white;
-}
-
-.node.stage.big .icon {
-  width: 64px;
-  height: 64px;
-}
-/* ===== LABEL ===== */
-.node.day .label {
+.energyRing {
   position: absolute;
-  top: 90px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-}
-
-
-/* ===== DAY GROUP VISUAL ===== */
-/* ===== DAY GROUP BACKGROUND ===== */
-.node.day::after {
-  content: "";
-  position: absolute;
-
-  top: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-
-  width: 260px;
-  height: 260px;
-
-  background: radial-gradient(
-    circle,
-    rgba(99,102,241,0.18),
-    transparent 70%
-  );
-
+  inset: -8px;
+  border: 2px solid var(--primary);
   border-radius: 50%;
-  z-index: -1;
+  opacity: 0.3;
+  animation: pulseRing 2s infinite;
 }
 
-.dark .node.day::after {
-  background: radial-gradient(
-    circle,
-    rgba(139,129,255,0.22),
-    transparent 70%
-  );
+@keyframes pulseRing {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.4); opacity: 0; }
 }
 
-.currentPointer {
-  position: absolute;
-  top: -28px;
-  left: 50%;
 
-  transform: translateX(-50%) scale(1.4); 
 
-  font-size: 34px;
-  color: #58cc02;
-
-  animation: bounceArrow 0.9s ease-in-out infinite;
-
-  filter:
-    drop-shadow(0 0 10px rgba(88,204,2,0.8))
-    drop-shadow(0 0 20px rgba(88,204,2,0.4));
-}
-
-.currentPointer::after {
-  content: "";
-  position: absolute;
-
-  left: 50%;
-  top: 18px;
-
-  width: 2px;
-  height: 18px;
-
-  transform: translateX(-50%);
-
-  background: linear-gradient(
-    to bottom,
-    rgba(88,204,2,0.8),
-    transparent
-  );
-
-  opacity: 0.6;
-}
-
-@keyframes bounceArrow {
-  0% {
-    transform: translateX(-50%) translateY(0) scale(1.4);
-  }
-
-  50% {
-    transform: translateX(-50%) translateY(-6px) scale(1.4);
-  }
-
-  100% {
-    transform: translateX(-50%) translateY(0) scale(1.4);
-  }
-}
 
 /* ===== STAGE LABEL ===== */
 .stageLabel {
   position: absolute;
-
   top: 50%;
   transform: translateY(-50%);
-
-  font-size: 12px;
-  font-weight: 500;
-
-  width: 120px;             
-  max-width: 120px;
-
-  line-height: 1.3;
-
-  white-space: normal;
-  word-break: normal;       
-  overflow-wrap: break-word;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-
-  opacity: 0.95;
-}
-
-.stageLabel small {
-  display: block;
-  margin-top: 3px;
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--primary);
-  text-transform: uppercase;
-}
-
-.node.passed:hover .icon {
-  transform: scale(1);
-  filter: saturate(1.1);
+  
+  /* Quan trọng: Chuyển sang Flex Column để Badge tự động xuống dưới */
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* Khoảng cách giữa tên Stage và Badge */
+  
+  width: 140px; /* Tăng nhẹ chiều rộng để tránh bị cắt chữ */
+  font-size: 12px; 
+  pointer-events: none;
+  z-index: 10;
 }
 
 
-.mapPath path {
-  stroke: #6366f1;
-  stroke-width: 6;
-  stroke-linecap: round;
-
-  stroke-dasharray: 12 14;
-  animation: flow 6s linear infinite;
-
-  opacity: 0.9;
-  filter: drop-shadow(0 0 10px rgba(99,102,241,0.6));
+.stageName {
+  font-family: var(--font-vn);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  /* Đổ bóng nhẹ để chữ nổi bật trên nền sóng */
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-
-/* bên trái icon */
-.node.left .stageLabel,
-.node.forceLeft .stageLabel {
-  right: 70px;
+/* Căn chỉnh theo phía (Trái/Phải) */
+.node.left .stageLabel {
+  right: 75px;
+  align-items: flex-end;
   text-align: right;
 }
 
-/* bên phải icon */
-.node.right .stageLabel,
-.node.forceRight .stageLabel {
-  left: 70px;
+.node.right .stageLabel {
+  left: 75px;
+  align-items: flex-start;
   text-align: left;
 }
 
-/* ===== ANIMATION ===== */
+.badge {
+  display: inline-flex; /* Chuyển sang inline-flex */
+  align-items: center;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  width: fit-content; /* Chỉ rộng bằng nội dung chữ */
+}
+
+.badge.passed {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.badge.current {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
+
+/* Loại bỏ các bóng đổ kiểu Duolingo cũ */
+.node.day::after { display: none; }
+
+
+
+
+/* ================= AAA LOADING SCREEN ================= */
+.loadingWrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  z-index: 9999;
+  /* Hiệu ứng hạt bụi mờ ảo phía sau */
+  background-image: radial-gradient(circle at center, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+}
+
+.loadingCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 300px;
+  padding: 40px 30px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Biểu tượng Torii phía trên (Dùng filter để đổi màu theo theme) */
+.loadingCard::before {
+  content: "⛩️";
+  font-size: 48px;
+  margin-bottom: 20px;
+  display: block;
+  filter: drop-shadow(0 0 15px rgba(139, 129, 255, 0.3));
+}
+
+.loadingText {
+  color: var(--text);
+  font-family: var(--font-ui); /* Hoặc font-jp nếu bạn thích */
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  margin-bottom: 5px;
+}
+
+/* Thanh Progress xịn hơn với gradient màu Success/Primary */
+.spinner {
+  width: 140px;
+  height: 4px;
+  background: var(--surface-strong);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  margin: 15px 0;
+}
+
+.spinner::after {
+  content: "";
+  position: absolute;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    var(--primary), 
+    var(--success), 
+    transparent
+  );
+  animation: loadingBar 1.8s infinite cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.loadingSub {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  animation: pulse 1.5s infinite;
+}
+
+/* Thông số nhỏ phía dưới tạo cảm giác High-tech */
+.loadingData {
+  margin-top: 25px;
+  display: flex;
+  gap: 15px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+/* ANIMATIONS */
+@keyframes loadingBar {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
 @keyframes pulse {
-  0% { transform: scale(1) }
-  50% { transform: scale(1.25) }
-  100% { transform: scale(1) }
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.3; }
 }
 
-/* ===== SIZE ===== */
-.node.small .icon {
-  width: 54px;
-  height: 54px;
-}
-
-.node.big .icon {
-  width: 70px;
-  height: 70px;
-  border: 3px solid white;
-  box-shadow:
-    0 0 15px var(--primary),
-    0 0 40px rgba(99,102,241,0.5);
-}
-
-/* hiệu ứng checkpoint */
-.node.big.current .icon {
-  animation: pulseBig 1.2s infinite;
-}
-
-@keyframes pulseBig {
-  0% { transform: scale(1) }
-  50% { transform: scale(1.35) }
-  100% { transform: scale(1) }
-}
-
-
-
-.loading {
-  animation: fadeIn 0.4s ease;
-}
-
-.loading::after {
-  content: "Đang khởi tạo thế giới sinh tồn...";
-  margin-top: 10px;
-  font-size: 13px;
-  opacity: 0.7;
-
-  animation: blink 1.2s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Hiệu ứng card phát sáng nhẹ */
+.cardGlow {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity: 0.5;
 }

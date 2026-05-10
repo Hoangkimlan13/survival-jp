@@ -27,8 +27,55 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI";
   color: var(--text, #fff);
   background: var(--bg, #0f0f12);
+
+  position: relative;
+  overflow: hidden;
 }
 
+.game::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Giảm opacity xuống thấp hơn để tinh tế */
+  opacity: 0.08; 
+
+  /* Quan trọng: Dùng Mask để giấu sóng ở phần giữa màn hình */
+  -webkit-mask-image: radial-gradient(circle, transparent 30%, black 100%);
+  mask-image: radial-gradient(circle, transparent 30%, black 100%);
+
+  background-image: 
+    radial-gradient(circle at 100% 150%, transparent 24%, var(--primary) 25%, var(--primary) 28%, transparent 29%, transparent 36%, var(--primary) 36%, var(--primary) 40%, transparent 41%, transparent),
+    radial-gradient(circle at 0% 150%, transparent 24%, var(--primary) 25%, var(--primary) 28%, transparent 29%, transparent 36%, var(--primary) 36%, var(--primary) 40%, transparent 41%, transparent),
+    radial-gradient(circle at 50% 100%, transparent 4%, var(--primary) 4%, var(--primary) 7%, transparent 8%, transparent 14%, var(--primary) 14%, var(--primary) 17%, transparent 18%, transparent 24%, var(--primary) 24%, var(--primary) 27%, transparent 28%, transparent 34%, var(--primary) 34%, var(--primary) 37%, transparent 38%, transparent);
+  background-size: 80px 40px;
+}
+
+
+/* Thêm đoạn này vào file CSS */
+.game::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  
+  /* Sử dụng gradient mờ dần ra màu nền của hệ thống */
+  background: radial-gradient(
+    circle at center,
+    transparent 40%,
+    var(--surface-strong) 120% /* Tận dụng biến surface-strong có sẵn của bạn */
+  );
+  opacity: 0.6;
+}
+
+
+.hudShell, .questionCard, .choiceGrid, .fab {
+  position: relative;
+  z-index: 1;
+}
 
 /* ================= Load Game ================= */
 .loadingWrapper {
@@ -37,87 +84,89 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
-  background: var(--bg);
-  animation: fadeIn 0.3s ease;
+  background: var(--bg); /* Sẽ tự đổi theo Dark/Light */
+  z-index: 9999;
 }
 
-/* Card trung tâm */
+/* Card trung tâm - Bỏ border thô, dùng shadow mịn */
 .loadingCard {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-
-  padding: 24px 28px;
-  border-radius: 16px;
-
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-
-  border: 1px solid rgba(255, 255, 255, 0.08);
-
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-
-  animation: popIn 0.35s ease;
+  width: 280px;
+  padding: 40px;
+  border-radius: 24px;
+  background: var(--surface);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Spinner kiểu game */
+/* Hiệu ứng thanh Progress thay vì Spinner tròn nhàm chán */
 .spinner {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-
-  border: 3px solid rgba(34, 197, 94, 0.15);
-  border-top-color: #22c55e;
-
-  animation: spin 0.8s linear infinite;
-
-  /* glow effect */
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+  width: 100%;
+  height: 6px;
+  background: var(--surface-strong);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  margin: 20px 0;
 }
 
-/* Text chính */
+.spinner::after {
+  content: "";
+  position: absolute;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, var(--success), transparent);
+  animation: loadingBar 1.5s infinite ease-in-out;
+}
+
+/* Text chính - dùng font-jp cho chất Nhật */
 .loadingText {
-  color: #22c55e;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-
-  text-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+  color: var(--text);
+  font-family: var(--font-jp);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-/* Sub text */
+/* Sub text - Thêm hiệu ứng nhấp nháy (Blinking) */
 .loadingSub {
-  color: rgba(34, 197, 94, 0.65);
-  font-size: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+  animation: pulse 1.5s infinite;
+}
+
+/* Thêm một icon trang trí nhỏ phía trên */
+.loadingCard::before {
+  content: "⛩️"; /* Biểu tượng đền thờ Nhật */
+  font-size: 40px;
+  margin-bottom: 15px;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(34, 197, 94, 0.2));
 }
 
 /* ANIMATIONS */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+@keyframes loadingBar {
+  0% { left: -50%; }
+  100% { left: 100%; }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-@keyframes popIn {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+/* Hiệu ứng Fade out khi loading xong */
+.fadeOut {
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.5s ease;
 }
 
 
@@ -363,7 +412,8 @@
 
 .coinBadge span {
   font-size: 18px;
-  color: #fbbf24; /* Màu vàng kim loại */
+  color: #FFC857;
+  text-shadow: 0 0 12px rgba(255, 200, 87, 0.35);
   filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.4));
 }
 
@@ -380,12 +430,14 @@
 /* Tùy chỉnh màu sắc Badge để nổi bật trên Darkmode */
 .coinBadge {
   background: var(--surface-strong);
-  color: #f59e0b; /* Màu vàng đậm hơn chút cho rõ trên nền trắng */
+  color: #FFC857;
+  text-shadow: 0 0 12px rgba(255, 200, 87, 0.35);
 }
 
 .xpBadge {
   background: var(--surface-strong);
-  color: #0ea5e9;
+  color: #67D8FF;
+  text-shadow: 0 0 10px rgba(103, 216, 255, 0.3);
 }
 
 /* Dark mode overrides cụ thể nếu cần */
@@ -527,27 +579,50 @@
 
 
 /* ================= QUESTION CARD ================= */
+
 .questionCard {
   flex-shrink: 0;
-  overflow: hidden;
   position: relative;
-  padding: 12px;
-  border-radius: 12px;
-  padding-right: 12px;  /* chừa chỗ nút loa */
-  background: rgba(255,255,255,0.06);
-  backdrop-filter: blur(14px);
-
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-
-  margin: 10px 0;
+  /* Giảm padding để tiết kiệm diện tích */
+  padding: 14px 16px; 
+  border-radius: 16px;
+  
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  
+  /* Giới hạn chiều cao tối đa để tránh đẩy đáp án quá xa */
+  max-height: 28vh; 
+  overflow-y: auto; /* Cho phép cuộn nội bộ nếu câu hỏi cực dài */
+  
+  margin: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+
+/*
+.questionCard::before {
+  content: "Tình huống";
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 10px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+}
+*/
+
 
 .topRow {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  justify-content: flex-start; 
+  align-items: center; /* Đổi thành center để cân bằng với text */
+  gap: 12px;
 }
 
 /* text area */
@@ -560,10 +635,8 @@
   font-size: 18px;
   line-height: 2;
   font-family: "Noto Sans JP", sans-serif;
-
   flex: 1;        /* 🔥 quan trọng */
   min-width: 0;   /* 🔥 cực kỳ quan trọng cho flex */
-
   white-space: normal;   /* cho phép xuống dòng */
   overflow-wrap: anywhere; /* 🔥 force wrap iOS */
   word-break: break-word;  /* fallback */
@@ -571,17 +644,13 @@
 
 /* 🔥 CRITICAL FIX */
 .jpText ruby {
-  display: ruby;
-  ruby-position: over;
-  white-space: normal;
+  ruby-align: center;
 }
 
-/* furigana */
+
 .jpText rt {
-  font-size: 12px;
-  color: #888;
-  text-align: center;
-  line-height: 1;
+  font-size: 9px; 
+  opacity: 0.8;
 }
 
 /* kana */
@@ -591,25 +660,15 @@
 
 
 .translation {
-  margin-top: 10px;
-  padding: 12px 14px;
-
-  border-radius: 12px;
-
-  background: linear-gradient(
-    135deg,
-    rgba(99,102,241,0.12),
-    rgba(99,102,241,0.04)
-  );
-
-  border: 1px solid rgba(99,102,241,0.2);
-
-  font-size: 14px;
-  line-height: 1.5;
-
-  color: var(--text);
-
-  animation: fadeSlideIn 0.25s ease;
+  margin-top: 4px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.03); /* Cực nhẹ */
+  border-left: 3px solid var(--primary); /* Điểm nhấn hiện đại */
+  border-radius: 4px 12px 12px 4px;
+  font-size: 13.5px;
+  color: var(--muted);
+  font-style: italic;
+  animation: fadeSlideIn 0.3s ease-out;
 }
 
 @keyframes fadeSlideIn {
@@ -628,17 +687,12 @@
   all: unset;
   flex-shrink: 0;
 
-  width: 42px;
-  height: 42px;
+  width: 32px; 
+  height: 32px;
 
   border-radius: 50%;
-  border: 1px solid var(--btn-border);
-
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(255,255,255,0.15),
-    rgba(255,255,255,0.02)
-  );
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 
   color: var(--text);
 
@@ -679,7 +733,6 @@
 .speakSmall {
   width: 34px;
   height: 34px;
-
   flex-shrink: 0;
 }
 
@@ -813,31 +866,26 @@
 .choiceWrap {
   display: flex;
   align-items: center; 
-  gap: 8px;
   padding: 0; 
 }
 
 .choiceTranslation {
-  margin-top: 4px;
-
-  font-size: 13px;
-  line-height: 1.4;
-
+  margin-top: 6px;
+  font-size: 12.5px;
   color: var(--muted);
-
-  padding-left: 2px;
-
-  animation: fadeSlideIn 0.2s ease;
+  font-style: italic;
+  opacity: 0.8;
+  border-top: 1px dashed var(--border);
+  padding-top: 4px;
 }
 
-.choiceTranslation::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 10px;
-
-  opacity: 0.6;
-  pointer-events: none;
+.choiceWrap :global(.speakBtn) { /* Nếu class từ component khác */
+  width: 52px !important;
+  height: auto !important; /* Để nó cao bằng nút đáp án */
+  border-radius: 20px;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 0 var(--border-strong);
 }
 
 
@@ -845,9 +893,10 @@
 /* nút đáp án chính */
 .choiceBtn {
   flex: 1;
+  position: relative;
 
-  padding: 14px 14px;
-  border-radius: 16px;
+  padding: 16px;
+  border-radius: 20px;
 
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--border);
@@ -861,22 +910,25 @@
   display: flex;
   align-items: center;
 
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease,
-    background 0.2s ease;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 
   cursor: pointer;
 
-  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+  box-shadow: 
+    0 4px 0 var(--border-strong), 
+    0 8px 16px rgba(0, 0, 0, 0.1);
+    
 }
 
 
-
-.choiceBtn:active {
-  transform: scale(0.96);
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+.choiceBtn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 
+    0 1px 0 var(--border-strong),
+    0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 
 
 /* ===== PERFECT ===== */
@@ -939,21 +991,6 @@
 }
 
 
-/* ===== POP (mượt hơn) ===== */
-@keyframes popSmooth {
-  0% {
-    transform: scale(0.92);
-    filter: brightness(1.1);
-  }
-  60% {
-    transform: scale(1.04);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-
 
 
 .choiceInner {
@@ -963,8 +1000,8 @@
 }
 
 .choiceIndex {
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
 
   border-radius: 8px;
 
@@ -974,10 +1011,10 @@
   align-items: center;
   justify-content: center;
 
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
 
-  color: var(--muted);
+  color: var(--primary);
 
   flex-shrink: 0;
 }
@@ -990,8 +1027,10 @@
 }
 
 .choiceLabel .mainText {
-  font-weight: 400 !important; 
   font-size: 14px;
+  font-weight: 400 !important;
+  color: var(--text);
+  line-height: 1.8; /* Cho furigana có chỗ đứng */
 }
 
 

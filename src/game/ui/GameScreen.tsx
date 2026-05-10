@@ -30,6 +30,7 @@ export default function GameScreen({
   leveledUp = false,
   isReplay = false,
   prevStreak,
+  isLoadingQuestion,
 }: any) {
 
   /* ================= GUARD ================= */
@@ -362,14 +363,14 @@ export default function GameScreen({
 
   /* ================= LOADING ================= */
 
- if (!progress || !safeCurrent) {
+if (!progress || !safeCurrent || isLoadingQuestion){
   return (
     <div className={styles.loadingWrapper}>
       <div className={styles.loadingCard}>
         <div className={styles.spinner} />
         <div className={styles.loadingText}>Đang tải câu hỏi...</div>
         <div className={styles.loadingSub}>
-          Chuẩn bị thử thách tiếp theo...
+          Vui lòng chờ trong giây lát
         </div>
       </div>
     </div>
@@ -481,7 +482,7 @@ export default function GameScreen({
 
           <div className={styles.resourceRow}>
             <div className={styles.coinBadge}>
-              <span className="material-symbols-rounded">payments</span>
+              <span className="material-symbols-rounded">paid</span>
                {progress.coins}
             </div>
 
@@ -570,23 +571,19 @@ export default function GameScreen({
                 `}
               >
                 <div className={styles.choiceInner}>
-
                   <div className={styles.choiceIndex}>
-                    {String.fromCharCode(65 + index)}
+                    {String.fromCharCode(64 + index + 1)}
                   </div>
-
                   <div className={styles.choiceLabel}>
-                    <span className={styles.mainText}>
+                    <div className={styles.mainText}>
                       {renderJapanese(c.text, c.reading)}
-                    </span>
-
+                    </div>
                     {showTranslate && c.translation && (
                       <div className={styles.choiceTranslation}>
                         {c.translation}
                       </div>
                     )}
                   </div>
-
                 </div>
               </button>
 
@@ -678,9 +675,9 @@ export default function GameScreen({
                 </div>
 
                 <div className={`${styles.rewardItem} ${coinAnimated < 0 ? styles.rewardPenalty : ""}`}>
-                  <span>Tiền</span>
+                  <span>Coin</span>
                   <strong>
-                    ¥ {
+                     {
                       coinAnimated > 0
                         ? `+${coinAnimated.toLocaleString()}`
                         : coinAnimated.toLocaleString()

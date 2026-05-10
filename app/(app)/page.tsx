@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getProgress, type ProgressLog } from "@/lib/progress"
 import { unlockAudioContext } from "@/src/game/sound"
+import { getRankName, getLevelProgress } from "@/src/game/config"
+
 
 type ThemeMode = "system" | "dark" | "light"
 
@@ -386,11 +388,59 @@ export default function HomePage() {
   const currentStage =
     stages.find(s => s.id === progress?.stageId) || stages[0]
 
+  const levelInfo = getLevelProgress(progress?.xp ?? 0)
+
   return (
     <div className="app">
 
+
       {/* HEADER */}
       <div className="header">
+
+        {/* LEFT HUD */}
+        <div className="hudLeft">
+
+          {/* LEVEL */}
+          <div className="hudRank">
+            <div className="lvBadge">
+              Lv.{progress?.level ?? 1}
+            </div>
+
+            <div className="rankBox">
+              <div className="rankName">
+                {getRankName(progress?.level ?? 1)}
+              </div>
+
+              <div className="expBarWrap">
+                <div className="expBar">
+                  <div
+                    className="expFill"
+                    style={{ width: `${levelInfo.ratio * 100}%` }}
+                  />
+                </div>
+
+                <div className="expPercent">
+                  {Math.floor(levelInfo.ratio * 100)}%
+                </div>
+              </div>
+            </div>
+          </div>
+
+        
+          {/* COIN */}
+          <div className="hudItem coin">
+            <span className="material-symbols-rounded">paid</span>
+            <span>{(progress?.coins ?? 0).toLocaleString()}</span>
+          </div>
+
+          <div className="hudItem xp">
+            <span className="xpStar">⭐</span>
+            <span>{(progress?.xp ?? 0).toLocaleString()}</span>
+          </div>
+
+        </div>
+
+        {/* RIGHT - CONTROL */}
         <div className="controlGroup">
 
           {/* SOUND */}
@@ -419,6 +469,7 @@ export default function HomePage() {
           </button>
 
         </div>
+
       </div>
 
       {/* SYSTEM BUTTON (optional nâng cao UX) */}
@@ -432,13 +483,13 @@ export default function HomePage() {
       {/* HERO */}
       <div className="hero">
         <div className="hero-overlay" />
-
+        
         <div className="hero-content">
-          <img src="/logo.png" className="logo" />
 
-          <p className="subtitle">
-            Sinh tồn tại Nhật bằng tiếng Nhật
-          </p>
+          {/* Logo nằm chính giữa Hero */}
+          <div className="hero-brand-area">
+            <img src="/logo.png" className="logo-main" />
+          </div>
         </div>
       </div>
 

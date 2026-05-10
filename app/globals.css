@@ -47,9 +47,10 @@ html, body {
 }
 
 .dark {
-  --bg: #0b1220;
-  --surface: #131c2f;
-  --surface-strong: #192540;
+  --bg: #0d1117;
+  --surface: rgba(22, 27, 34, 0.8);
+  --surface-strong: #161b22;
+  
   --text: #f8fafc;
   --muted: rgba(248, 250, 252, 0.68);
   --sheet-bg: #111827;
@@ -211,48 +212,273 @@ body.haptic-success .app-frame {
 }
 
 /* ===== HEADER WRAPPER ===== */
+
 .header {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
   z-index: 50;
-  transition: transform 0.3s ease;
+
+  gap: 10px;
 }
 
-.header.hide {
-  transform: translateY(-60px);
-}
 
-/* ===== CONTROL GROUP (🔥 điểm nâng cấp lớn nhất) ===== */
+.hudLeft,
 .controlGroup {
   display: flex;
-  gap: 6px;
+  align-items: center;
 
-  padding: 6px;
+  gap: 10px;
+
+  padding: 6px 10px;
 
   border-radius: 999px;
 
-  /* glass effect nâng cấp */
-  background: rgba(255,255,255,0.22);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  background: rgba(255,255,255,0.08);
 
   box-shadow:
-    0 10px 30px rgba(0,0,0,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.35);
+    0 10px 30px rgba(0,0,0,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+
+  transition: all 0.25s ease;
 }
 
+/* DARK MODE */
+.dark .hudLeft,
 .dark .controlGroup {
-  background: rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.06);
 
   box-shadow:
-    0 10px 30px rgba(0,0,0,0.7),
+    0 12px 40px rgba(0,0,0,0.6),
     inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
-/* ===== ICON BUTTON ===== */
+.hudLeft::before,
+.controlGroup::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.hudLeft {
+  gap: 10px;
+}
+
+.controlGroup {
+  gap: 6px;
+  transform: none;
+}
+
+
+/* ================= LEFT HUD ================= */
+.hudLeft {
+  gap: 12px;
+}
+
+/* ================= RANK ================= */
+.hudRank {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lvBadge {
+  font-size: 12px;
+  font-weight: 700;
+
+  padding: 4px 8px;
+  border-radius: 10px;
+
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff;
+
+  box-shadow: 0 6px 16px rgba(245,158,11,0.25);
+}
+
+
+.rankBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rankName {
+  font-size: 11px;
+  font-weight: 600;
+  color: #111;
+}
+
+.dark .rankName {
+  color: #fff;
+}
+
+
+.expBarWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.expBar {
+  width: 70px;
+  height: 6px;
+
+  border-radius: 999px;
+  overflow: hidden;
+
+  background: rgba(0,0,0,0.15);
+}
+
+.dark .expBar {
+  background: rgba(255,255,255,0.1);
+}
+
+.expFill {
+  height: 100%;
+  border-radius: 999px;
+
+  background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+
+  transition: width .5s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* % dưới bar */
+.expPercent {
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+
+  color: rgba(255,255,255,0.7);
+}
+
+.dark .expPercent {
+  color: rgba(255,255,255,0.6);
+}
+
+/* ================= HUD ITEM (XP / COIN) ================= */
+.hudItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  padding: 5px 10px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(16px);
+
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* hover nhẹ kiểu "floating UI" */
+.hudItem:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* shimmer nền nhẹ */
+.hudItem::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.08),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: shimmer 6s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  40% { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+.dark .hudItem {
+  background: rgba(0,0,0,0.25);
+}
+
+.hudItem .material-symbols-rounded {
+  font-size: 16px;
+}
+
+.hudItem.coin {
+  color: #ffc857;
+  text-shadow: 0 0 12px #ffc85759;
+}
+
+.hudItem.coin .material-symbols-rounded {
+  color: #ffc857;
+  filter: drop-shadow(0 0 8px #ffc85755);
+}
+
+/* pulse nhẹ */
+.hudItem.coin {
+  animation: coinPulse 3s ease-in-out infinite;
+}
+
+@keyframes coinPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(255, 200, 87, 0);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(255, 200, 87, 0.25);
+  }
+}
+
+.hudItem.xp {
+  color: #67d8ff;
+  text-shadow: 0 0 10px #67d8ff4d;
+}
+
+.hudItem.xp .xpStar {
+  color: #67d8ff;
+  filter: drop-shadow(0 0 8px #67d8ff66);
+  font-size: 14px;
+}
+
+/* breathing glow */
+.hudItem.xp {
+  animation: xpBreath 2.8s ease-in-out infinite;
+}
+
+@keyframes xpBreath {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(103, 216, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(103, 216, 255, 0.25);
+  }
+}
+
+
+/* ================= ICON BUTTON ================= */
 .iconBtn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
 
   border-radius: 50%;
   border: none;
@@ -266,48 +492,26 @@ body.haptic-success .app-frame {
   background: transparent;
   color: #111;
 
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
 .dark .iconBtn {
   color: #fff;
 }
 
-/* icon size */
-.iconBtn .material-symbols-rounded {
-  font-size: 22px;
-  transition: transform 0.2s ease;
-}
-
-/* ===== HOVER ===== */
 .iconBtn:hover {
   transform: translateY(-1px);
 }
 
-/* ===== ACTIVE CLICK ===== */
 .iconBtn:active {
-  transform: scale(0.9);
+  transform: scale(0.92);
 }
 
-/* ===== STATE ON (🔥 QUAN TRỌNG) ===== */
 .iconBtn.active {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
-
-  box-shadow:
-    0 6px 14px rgba(34,197,94,0.4),
-    inset 0 -2px 0 rgba(0,0,0,0.25);
-}
-
-/* ===== ICON ANIMATION ===== */
-.iconBtn.active .material-symbols-rounded {
-  transform: scale(1.1);
-}
-
-/* ===== MICRO INTERACTION ===== */
-.iconBtn.active {
   animation: pop 0.18s ease;
-}
+} 
 
 @keyframes pop {
   0% {
@@ -323,15 +527,19 @@ body.haptic-success .app-frame {
 /* ===== HERO ===== */
 .hero {
   position: relative;
-  min-height: 50vh;
-  height: clamp(60vh, 65vh, 85vh);
+
   width: 100%;
+
+  /* 🔥 FIX CHÍNH: chia đúng 65% */
+  height: 60vh;
+
   overflow: hidden;
 
   background-image: url('/bg.jpg');
   background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
+
+  /* 👇 FIX QUAN TRỌNG CHO FUJI/TOKYO */
+  background-position: 50% 20%;
 }
 
 .hero-overlay {
@@ -355,55 +563,37 @@ body.haptic-success .app-frame {
   );
 }
 
-.hero-content {
-  position: absolute;
-  top: 20px;
-  width: 100%;
-  display: flex;               
-  flex-direction: column;       
-  align-items: center;        
+
+/* ===== LOGO AREA ===== */
+.hero-brand-area {
+  height: 100%;
+  display: flex;
+  align-items: center;
   justify-content: center;
 
-  text-align: center;
+  padding-bottom: 40px;
+
+  position: relative;
 }
 
-.logo {
+
+.logo-main {
+  margin-top: 80px;
   width: 40%;
-  margin-top: 25px;
-  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6));
 }
 
-.subtitle {
-  display: inline-block;
 
-  font-size: 15px;
-  font-weight: 500;
+/* ===== =========SHEET ========= */
 
-  color: #111;
-
-  padding: 6px 12px;
-  margin-top: 8px;
-
-  border-radius: 999px;
-
-  background: rgba(255,255,255,0.75);
-  backdrop-filter: blur(10px);
-
-  border: 1px solid rgba(255,255,255,0.6);
-
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-}
-
-/* ===== SHEET ===== */
-/* ===== DRAG HANDLE (MINIMAL) ===== */
 .dragHandle {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  height: 16px;          /* 👈 FIX CỨNG */
-  padding: 0;            /* 👈 xoá padding luôn */
+  height: 16px;          
+  padding: 0;           
   margin: 0;
 
   cursor: grab;
@@ -460,12 +650,11 @@ body.haptic-success .app-frame {
 }
 
 
-
-
 .sheet {
   position: absolute;
   bottom: 0;
   left: 0;
+  z-index: 999;
 
   width: 100%;
   height: 75dvh;
@@ -896,4 +1085,17 @@ body.haptic-success .app-frame {
   .iconBtn .material-symbols-rounded {
     font-size: 20px;
   }
+}
+
+/* Tương thích màn hình nhỏ */
+@media (max-width: 360px) {
+  .hero-stats {
+    gap: 6px;
+    padding: 0 8px;
+  }
+  .hero-stat, .hero-rank {
+    padding: 0 8px;
+    height: 38px;
+  }
+  .hero-rankName { font-size: 10px; }
 }
