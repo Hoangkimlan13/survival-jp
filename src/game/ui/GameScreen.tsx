@@ -483,11 +483,11 @@ if (!progress || !safeCurrent || isLoadingQuestion){
           <div className={styles.resourceRow}>
             <div className={styles.coinBadge}>
               <span className="material-symbols-rounded">paid</span>
-               {progress.coins}
+               {(progress.coins ?? 0).toLocaleString("en-US")}
             </div>
 
             <div className={styles.xpBadge}>
-              ⭐ {progress.xp}
+              ⭐ {(progress.xp ?? 0).toLocaleString("en-US")}
             </div>
           </div>
 
@@ -666,25 +666,34 @@ if (!progress || !safeCurrent || isLoadingQuestion){
             </div>
 
             {!isReplay && (
-              <div className={styles.rewardPanel}>
-                <div className={styles.rewardItem}>
-                  <span>XP</span>
-                  <strong>
-                    ⭐ +{xpAnimated.toLocaleString()}
-                  </strong>
-                </div>
+            <div className={styles.rewardPanel}>
 
-                <div className={`${styles.rewardItem} ${coinAnimated < 0 ? styles.rewardPenalty : ""}`}>
-                  <span>Coin</span>
-                  <strong>
-                     {
-                      coinAnimated > 0
-                        ? `+${coinAnimated.toLocaleString()}`
-                        : coinAnimated.toLocaleString()
+              {/* COIN */}
+              <div className={`${styles.rewardItem} ${coinAnimated < 0 ? styles.rewardPenalty : ""}`}>
+                <span>Coin</span>
+
+                <strong className={`${styles.valueRow} ${styles.coin}`}>
+                  <span className="material-symbols-rounded">paid</span>
+                  <span>
+                    {coinAnimated > 0
+                      ? `+${coinAnimated.toLocaleString()}`
+                      : coinAnimated.toLocaleString()
                     }
-                  </strong>
-                </div>
+                  </span>
+                </strong>
               </div>
+
+              {/* XP */}
+              <div className={styles.rewardItem}>
+                <span>XP</span>
+
+                <strong className={`${styles.valueRow} ${styles.xp}`}>
+                  ⭐
+                  <span>+{xpAnimated.toLocaleString()}</span>
+                </strong>
+              </div>
+
+            </div>
             )}
 
             {isReplay && (
@@ -693,21 +702,21 @@ if (!progress || !safeCurrent || isLoadingQuestion){
               </div>
             )}
 
-           {leveledUp && (
-            <div className={styles.levelUp}>
-              <div className={styles.levelLabel}>
-                LEVEL UP
-              </div>
+            {leveledUp && (
+              <div className={styles.levelUp}>
+                <div className={styles.levelLabel}>
+                  LEVEL UP
+                </div>
 
-              <div className={styles.levelValue}>
-                Lv {progress.level}
-              </div>
+                <div className={styles.levelValue}>
+                  Lv {progress.level}
+                </div>
 
-              <div className={styles.rankName}>
-                {rankName}
+                <div className={styles.rankName}>
+                  {rankName}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
             <button
               className={styles.nextBtn}

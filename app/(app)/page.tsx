@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getProgress, type ProgressLog } from "@/lib/progress"
 import { unlockAudioContext } from "@/src/game/sound"
-import { getRankName, getLevelProgress } from "@/src/game/config"
+import { getRankName, getLevelProgress, formatCompactNumber } from "@/src/game/config"
 
 
 type ThemeMode = "system" | "dark" | "light"
@@ -430,12 +430,12 @@ export default function HomePage() {
           {/* COIN */}
           <div className="hudItem coin">
             <span className="material-symbols-rounded">paid</span>
-            <span>{(progress?.coins ?? 0).toLocaleString()}</span>
+            <span>{formatCompactNumber(progress?.coins ?? 0)}</span>
           </div>
 
           <div className="hudItem xp">
             <span className="xpStar">⭐</span>
-            <span>{(progress?.xp ?? 0).toLocaleString()}</span>
+            <span>{formatCompactNumber(progress?.xp ?? 0)}</span>
           </div>
 
         </div>

@@ -103,12 +103,12 @@ export default function ProfilePage() {
           <div className="statusGroup">
             <div className="statItem money">
               <span className="material-symbols-rounded">paid</span>
-              <span className="statVal">{progress.coins ?? 0}</span>
+              <span className="statVal">{(progress.coins ?? 0).toLocaleString("en-US")}</span>
             </div>
             
             <div className="statItem energy">
               ⭐
-              <span className="statVal">{progress.xp}</span>
+              <span className="statVal">{(progress.xp ?? 0).toLocaleString("en-US")}</span>
             </div>
 
             <div className="levelEmblem">

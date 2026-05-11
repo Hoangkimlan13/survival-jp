@@ -17,7 +17,7 @@ export const QUALITY_SCORE: Record<ChoiceQuality, number> = {
 }
 
 export const QUALITY_COINS: Record<ChoiceQuality, number> = {
-  PERFECT: 6,
+  PERFECT: 15,
   GOOD: 4,
   OK: 2,
   BAD: -1
@@ -35,6 +35,32 @@ export function getLevelFromXp(xp: number) {
     requiredTotal += nextLevelCost
     level += 1
   }
+}
+
+export function formatCompactNumber(value: number) {
+  const safe = Math.max(0, Number(value) || 0)
+
+  const format = (num: number, suffix: string) => {
+    const formatted = (num).toFixed(1)
+
+    return formatted.endsWith(".0")
+      ? `${parseInt(formatted)}${suffix}`
+      : `${formatted}${suffix}`
+  }
+
+  if (safe >= 1_000_000_000) {
+    return format(safe / 1_000_000_000, "B")
+  }
+
+  if (safe >= 1_000_000) {
+    return format(safe / 1_000_000, "M")
+  }
+
+  if (safe >= 1_000) {
+    return format(safe / 1_000, "K")
+  }
+
+  return safe.toString()
 }
 
 export function getLevelProgress(xp: number) {
@@ -58,12 +84,12 @@ export function getLevelProgress(xp: number) {
 }
 
 export function getRankName(level: number) {
-  if (level >= 30) return "Bậc thầy sinh tồn"
-  if (level >= 20) return "Chuyên gia"
-  if (level >= 12) return "Người dẫn đường"
-  if (level >= 7) return "Lữ khách"
-  if (level >= 3) return "Tập sự"
-  return "Tân binh"
+  if (level >= 30) return "Thông thạo"
+  if (level >= 20) return "Vững vàng"
+  if (level >= 12) return "Tiến bộ"
+  if (level >= 7) return "Đang học"
+  if (level >= 3) return "Mới bắt đầu"
+  return "Khởi đầu"
 }
 
 export const CONFETTI_CONFIG: Record<ChoiceQuality, { particleCount: number; spread: number }> = {
