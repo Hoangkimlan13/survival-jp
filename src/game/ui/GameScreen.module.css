@@ -633,24 +633,29 @@
 /* chữ Nhật */
 .jpText {
   font-size: 18px;
-  line-height: 2;
+  line-height: 1.6; 
   font-family: "Noto Sans JP", sans-serif;
-  flex: 1;        /* 🔥 quan trọng */
-  min-width: 0;   /* 🔥 cực kỳ quan trọng cho flex */
-  white-space: normal;   /* cho phép xuống dòng */
-  overflow-wrap: anywhere; /* 🔥 force wrap iOS */
-  word-break: break-word;  /* fallback */
+  flex: 1;        
+  min-width: 0;  
+  white-space: normal;   
+  overflow-wrap: anywhere; 
+  word-break: break-word;  
 }
 
 /* 🔥 CRITICAL FIX */
 .jpText ruby {
   ruby-align: center;
+  line-height: 1.2;
+  padding: 0 1px;
 }
 
 
 .jpText rt {
+  margin-top: -2px;
   font-size: 9px; 
   opacity: 0.8;
+  line-height: 1;
+  margin-bottom: -2px;  
 }
 
 /* kana */

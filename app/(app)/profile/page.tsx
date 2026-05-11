@@ -128,12 +128,12 @@ export default function ProfilePage() {
             <h1>HỒ SƠ SINH TỒN</h1>
             <div className="statusLine">
               <span className="statusDot"></span>
-              <span className="statusTag">SYSTEM ACTIVE</span>
+              <span className="statusTag">ĐANG SINH TỒN</span>
             </div>
           </div>
           
           <div className="progressQuickInfo">
-            <div className="pBox">Ngày {progress.dayId}</div>
+            <div className="pBox">Ngày {progress.dayId} - </div>
             <div className="pBox">Màn {progress.stageId}</div>
           </div>
         </div>

@@ -162,6 +162,7 @@
 .rankName {
   font-size: 10px;
   font-weight: 700;
+  margin-top: 2px;
   color: var(--text);
   text-transform: uppercase;
   white-space: nowrap; /* Không cho xuống dòng */

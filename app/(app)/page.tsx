@@ -528,7 +528,7 @@ export default function HomePage() {
             <div>
               <p className="status-subtitle">Hành trình hiện tại</p>
               <p className="status-title">
-                Ngày {currentDay?.order ?? 1}: {currentDay?.name ?? "Loading..."}
+                Ngày {currentDay?.order ?? 1}: {currentDay?.name ?? "Đang tải..."}
               </p>
             </div>
             <span className="status-chip">
@@ -537,7 +537,7 @@ export default function HomePage() {
           </div>
 
           <p className="status-stage">
-            {currentStage?.name ?? "Loading..."}
+            {currentStage?.name ?? "Đang tải..."}
           </p>
 
           <p className="status-feeling">
