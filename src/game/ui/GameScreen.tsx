@@ -33,9 +33,30 @@ export default function GameScreen({
   isLoadingQuestion,
 }: any) {
 
+  
+  const [days, setDays] = useState<any[]>([])
+
+  useEffect(() => {
+    api.getAllDaysWithStages().then((data: any[]) => {
+      const cleaned = data
+        .filter(d => d.isPublished)
+        .map(d => ({
+          ...d,
+          stages: d.stages?.filter((s: any) => s.isPublished) ?? []
+        }))
+
+      setDays(cleaned)
+    })
+  }, [])
+
   /* ================= GUARD ================= */
 
-  const [dayMeta, setDayMeta] = useState<{ id: number; name: string; order: number } | null>(null)
+  const [dayMeta, setDayMeta] = useState<{
+    id: number
+    name: string
+    order: number
+    stages?: { id: number }[]
+  } | null>(null)
 
   const safeCurrent = current ?? null
   const safeChoices = safeCurrent?.choices ?? []
@@ -403,6 +424,18 @@ if (!progress || !safeCurrent || isLoadingQuestion){
 
   /* ================= RENDER ================= */
 
+  const currentDay = days.find(d => d.id === progress?.dayId)
+
+  const stageNumberInDay = (() => {
+    if (!currentDay?.stages?.length || !progress?.stageId) return null
+
+    const index = currentDay.stages.findIndex(
+      (s: any) => s.id === progress.stageId
+    )
+
+    return index >= 0 ? index + 1 : null
+  })()
+
   return (
     <div
       className={`${styles.game} ${isLocked ? styles.locked : ""}`}
@@ -443,17 +476,15 @@ if (!progress || !safeCurrent || isLoadingQuestion){
           </div>
 
           <div className={styles.stageTitle}>
-            Màn: {progress.stageName || `Stage ${progress.stageId}`}
-          </div>
-
-          <div className={styles.stageSub}>
-            Câu {currentTurn}/{progress.stageGoal}
+            Màn {stageNumberInDay || progress.stageId}
+            {progress.stageName && ` : ${progress.stageName}`}
           </div>
 
         </div>
 
+        
         {/* RIGHT - compact player */}
-        {/* RIGHT - compact player */}
+        {!isReplay && (
         <div className={styles.playerMini}>
 
           <div className={styles.playerTop}>
@@ -492,6 +523,7 @@ if (!progress || !safeCurrent || isLoadingQuestion){
           </div>
 
         </div>
+        )}
 
       </div>
 

@@ -267,6 +267,7 @@
 .dayLabel {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px; /* Khoảng cách giữa chữ và Pill "Ôn lại" */
   font-size: 11px;
   font-weight: 700;
@@ -651,7 +652,6 @@
 
 
 .jpText rt {
-  margin-top: -2px;
   font-size: 9px; 
   opacity: 0.8;
   line-height: 1;

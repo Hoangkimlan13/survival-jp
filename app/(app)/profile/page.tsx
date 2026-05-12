@@ -22,9 +22,13 @@ export default function ProfilePage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const currentRef = useRef<HTMLDivElement>(null)
 
+  const [mapLoading, setMapLoading] = useState(true)
+
   // ================= LOAD =================
   useEffect(() => {
     setProgress(getProgress())
+
+    setMapLoading(true)
 
     api.getAllDaysWithStages().then((data: Day[]) => {
       const cleaned = data
@@ -38,6 +42,7 @@ export default function ProfilePage() {
         .sort((a, b) => a.order - b.order)
 
       setDays(cleaned)
+      setMapLoading(false) 
     })
   }, [])
 
@@ -90,6 +95,20 @@ export default function ProfilePage() {
     );
   }
 
+
+  const currentDay = days.find(d => d.id === progress?.dayId)
+
+  const stageNumberInDay = (() => {
+    if (!currentDay) return 0
+
+    const index = currentDay.stages.findIndex(
+      s => s.id === progress?.stageId
+    )
+
+    return index >= 0 ? index + 1 : 0
+  })()
+
+
   return (
     <div className="profile">
 
@@ -134,13 +153,32 @@ export default function ProfilePage() {
           
           <div className="progressQuickInfo">
             <div className="pBox">Ngày {progress.dayId} - </div>
-            <div className="pBox">Màn {progress.stageId}</div>
+            <div className="pBox">
+              Màn {stageNumberInDay} / {currentDay?.stages.length ?? 0}
+            </div>
           </div>
         </div>
       </div>
 
       {/* MAP */}
       <div className="mapWrapper" ref={mapRef}>
+
+          {mapLoading && (
+            <div className="loadingWrapper">
+              <div className="loadingCard">
+                <div className="cardGlow"></div>
+                
+                <div className="loadingText">ĐANG KHỞI TẠO...</div>
+                
+                <div className="spinner">
+                  <div className="progressFill"></div>
+                </div>
+                
+                <div className="loadingSub">Đang thiết lập bản đồ</div>
+                
+              </div>
+            </div>
+          )}
 
       <div className="oceanBackground"></div>
 
