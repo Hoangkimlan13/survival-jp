@@ -40,6 +40,7 @@ export default function GameClient() {
       onAnswer={view.answer}
       onNext={view.next}
       onSkip={game.skip}
+      onUseCoin={game.useCoin}
       skipEffect={game.skipEffect}
       showTranslate={showTranslate}
       setShowTranslate={setShowTranslate}

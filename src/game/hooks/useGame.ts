@@ -377,6 +377,33 @@ const skip = async () => {
   setPhase("idle")
 }
 
+
+
+/* ================= USE COIN (DỊCH/SKIP) ================= */
+const useCoin = (amount: number) => {
+  if (!progress) return false;
+
+  // Kiểm tra số dư
+  if ((progress.coins ?? 0) < amount) return false;
+
+  // Cập nhật progress mới
+  const updatedProgress = {
+    ...progress,
+    coins: (progress.coins ?? 0) - amount
+  };
+
+  // Cập nhật State để UI nhảy số ngay
+  setProgressState(updatedProgress);
+
+  // Lưu vào database/localStorage nếu không phải chế độ chơi lại
+  if (!isReplay) {
+    setProgress(updatedProgress);
+  }
+
+  return true;
+};
+
+
   /* ================= NEXT ================= */
 
   const next = async () => {
@@ -615,6 +642,7 @@ const skip = async () => {
     answer,
     next,
     skip,
+    useCoin,
     xpGain,
     coinGain,
     leveledUp,

@@ -107,8 +107,7 @@ export default function AdminLayout({ children }: any) {
           {/* ===== NỘI DUNG GAME ===== */}
           <p className={styles.groupTitle}>Nội dung game</p>
           <Item href="/admin/days" icon="calendar_month" label="Days" />
-          <Item href="/admin/stages" icon="view_module" label="Stages" />
-          <Item href="/admin/questions" icon="quiz" label="Questions" />
+          <Item href="/admin/scenes" icon="movie_edit" label="Intro" />
           <Item href="/admin/stories" icon="auto_stories" label="Story" />
           <Item href="/admin/endings" icon="movie" label="Endings" />
 
@@ -129,9 +128,9 @@ export default function AdminLayout({ children }: any) {
         <Item href="/admin" icon="dashboard" />
         <Item href="/admin/users" icon="group"/>
         <Item href="/admin/days" icon="calendar_month" />
-        <Item href="/admin/stages" icon="view_module" />
-        <Item href="/admin/questions" icon="quiz" />
+        <Item href="/admin/scenes" icon="movie_edit" />
         <Item href="/admin/stories" icon="auto_stories" />
+        <Item href="/admin/endings" icon="movie" />
         <Item href="/admin/analytics" icon="analytics" />
       </div>
     </div>

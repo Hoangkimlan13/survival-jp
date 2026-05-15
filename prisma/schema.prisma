@@ -33,6 +33,7 @@ model Stage {
   isPublished  Boolean    @default(false)
   questions    Question[]
   day          Day        @relation(fields: [dayId], references: [id])
+  scene        StageScene?
   stories      Story[]
 }
 
@@ -78,6 +79,24 @@ enum ChoiceQuality {
   OK
   BAD
 }
+
+
+/// *
+/// * ================= STAGE SCENE (INTRO) =================
+model StageScene {
+  id          Int      @id @default(autoincrement())
+  title       String?  // Ví dụ: "Trước cửa quán Ramen"
+  content     String   @db.Text // Lời dẫn dắt
+  image       String?  
+  audioUrl    String?
+  buttonText  String?  @default("Bắt đầu")
+  
+  stageId     Int      @unique // Mỗi Stage chỉ cần 1 Intro duy nhất
+  stage       Stage    @relation(fields: [stageId], references: [id])
+
+  createdAt   DateTime @default(now())
+}
+
 
 model Story {
   id        Int           @id @default(autoincrement())

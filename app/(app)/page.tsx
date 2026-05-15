@@ -212,6 +212,11 @@ export default function HomePage() {
     const saved = localStorage.getItem("sound")
     setSound(saved === "on")
   }, [])
+  useEffect(() => {
+    if (sound) {
+      unlockAudioContext()
+    }
+  }, [sound])
 
   // ===== APPLY THEME =====
   const applyTheme = (mode: ThemeMode) => {
@@ -578,6 +583,10 @@ export default function HomePage() {
             onClick={() => {
               localStorage.removeItem("progress")
               localStorage.removeItem("game_event") 
+               Object.keys(localStorage)
+                .filter(k => k.startsWith("intro_seen_"))
+                .forEach(k => localStorage.removeItem(k))
+
               location.reload()
             }}
           >

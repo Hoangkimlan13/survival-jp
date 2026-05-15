@@ -374,7 +374,7 @@ body.haptic-success .app-frame {
   align-items: center;
   gap: 6px;
 
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
 
   padding: 5px 10px;
@@ -418,6 +418,8 @@ body.haptic-success .app-frame {
   background: rgba(0,0,0,0.25);
 }
 
+
+
 .hudItem .material-symbols-rounded {
   font-size: 18px;
 }
@@ -447,13 +449,13 @@ body.haptic-success .app-frame {
 }
 
 .hudItem.xp {
-  color: #67d8ff;
-  text-shadow: 0 0 10px #67d8ff4d;
+  color: var(--success); 
+  text-shadow: 0 0 12px #22c55e99;
 }
 
 .hudItem.xp .xpStar {
-  color: #67d8ff;
-  filter: drop-shadow(0 0 8px #67d8ff66);
+  color: var(--success); 
+  text-shadow: 0 0 12px #22c55e99;
   font-size: 14px;
 }
 

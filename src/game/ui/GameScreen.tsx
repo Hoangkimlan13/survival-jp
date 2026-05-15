@@ -3,13 +3,11 @@
 import styles from "./GameScreen.module.css"
 import { renderJapanese } from "@/src/lib/renderJapanese"
 import SpeakButton from "@/src/components/SpeakButton"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useMemo } from "react"
 import { api } from "@/src/game/api"
 import { getSmartMessage } from "@/src/game/utils"
 import { preloadAudioContext, unlockAudioContext } from "@/src/game/sound"
-import { getLevelProgress, getRankName } from "@/src/game/config"
-
-/* ================= COMPONENT ================= */
+import { getLevelProgress, getRankName, GAME_CONFIG } from "@/src/game/config"
 
 export default function GameScreen({
   progress,
@@ -17,7 +15,8 @@ export default function GameScreen({
   selected,
   onAnswer,
   onNext,
-  onSkip,       
+  onSkip,   
+  onUseCoin,     
   skipEffect,
   isLocked,
   canAnswer,
@@ -33,9 +32,92 @@ export default function GameScreen({
   isLoadingQuestion,
 }: any) {
 
-  
+  /* ================= STATES ================= */
   const [days, setDays] = useState<any[]>([])
+  const [dayMeta, setDayMeta] = useState<{
+    id: number
+    name: string
+    order: number
+    stages?: { id: number }[]
+  } | null>(null)
+  const [isHit, setIsHit] = useState(false)
+  const [xpAnimated, setXpAnimated] = useState(0)
+  const [coinAnimated, setCoinAnimated] = useState(0)
+  const [showIntro, setShowIntro] = useState(false)
+  const [isExiting, setIsExiting] = useState(false);
+  const [sceneData, setSceneData] = useState<any>(null)
+  
+  const selectedRef = useRef<HTMLButtonElement | null>(null)
 
+  /* ================= MEMOIZED VALUES ================= */
+  // Tính toán stageNumberInDay sớm để tránh lỗi undefined
+  const stageNumberInDay = useMemo(() => {
+    const currentDay = days.find(d => d.id === progress?.dayId)
+    if (!currentDay?.stages?.length || !progress?.stageId) return null
+    const index = currentDay.stages.findIndex((s: any) => s.id === progress.stageId)
+    return index >= 0 ? index + 1 : null
+  }, [days, progress?.dayId, progress?.stageId])
+
+  const safeCurrent = current ?? null
+  const safeChoices = safeCurrent?.choices ?? []
+  const levelInfo = getLevelProgress(progress?.xp ?? 0)
+  const rankName = getRankName(progress?.level ?? levelInfo.level)
+  const currentTurn = Math.min(progress?.turn ?? 1, progress?.stageGoal ?? 1)
+  
+  /* ================= Thanh hỗ trọ ================= */
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
+
+  const [startY, setStartY] = useState(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].clientY);
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const currentY = e.touches[0].clientY;
+    if (currentY - startY > 50) { // Nếu vuốt xuống hơn 50px
+      setIsSupportOpen(false);
+    }
+  };
+
+
+  /* ======= Reset khi sang câu mới đoạn dịch =====*/
+
+  const [usedTranslate, setUsedTranslate] = useState(false);
+  // Reset trạng thái đã trả tiền dịch khi sang câu hỏi mới
+  useEffect(() => {
+    if (current?.id) {
+      setUsedTranslate(false);
+    }
+  }, [current?.id]); // Lắng nghe sự thay đổi của ID câu hỏi
+
+  /* ======= Hàm hiện đỏ coin ở header =====*/
+  const [isCoinDeducting, setIsCoinDeducting] = useState(false);
+
+  // Hàm bọc lại onUseCoin để chạy hiệu ứng
+  const handleUseCoin = (amount: number) => {
+    onUseCoin?.(amount);
+    setIsCoinDeducting(true);
+    // Sau 500ms thì hết đỏ
+    setTimeout(() => setIsCoinDeducting(false), 500);
+  };
+
+  /* ================= Âm THANH ================= */
+  useEffect(() => {
+    const resume = () => {
+      unlockAudioContext()
+    }
+
+    window.addEventListener("pointerdown", resume)
+    window.addEventListener("touchstart", resume)
+
+    return () => {
+      window.removeEventListener("pointerdown", resume)
+      window.removeEventListener("touchstart", resume)
+    }
+  }, [])
+
+
+  /* ================= EFFECTS ================= */
+
+  // Load Days
   useEffect(() => {
     api.getAllDaysWithStages().then((data: any[]) => {
       const cleaned = data
@@ -44,208 +126,185 @@ export default function GameScreen({
           ...d,
           stages: d.stages?.filter((s: any) => s.isPublished) ?? []
         }))
-
       setDays(cleaned)
     })
   }, [])
 
-  /* ================= GUARD ================= */
-
-  const [dayMeta, setDayMeta] = useState<{
-    id: number
-    name: string
-    order: number
-    stages?: { id: number }[]
-  } | null>(null)
-
-  const safeCurrent = current ?? null
-  const safeChoices = safeCurrent?.choices ?? []
-
-  /* ================= PRELOAD AUDIO ================= */
-
-  useEffect(() => {
-    preloadAudioContext()
-  }, [])
-
-  /* ================= HP EFFECT ================= */
-
-  
-  const [isHit, setIsHit] = useState(false)
-
-  useEffect(() => {
-    if (!selected) return
-
-    if (selected.quality === "BAD") {
-      setIsHit(true)
-      const t = setTimeout(() => setIsHit(false), 300)
-      return () => clearTimeout(t)
-    }
-  }, [selected])
-
-  const currentTurn = Math.min(
-    progress?.turn ?? 1,
-    progress?.stageGoal ?? 1
-  )
-
-  const levelInfo = getLevelProgress(progress?.xp ?? 0)
-  const rankName = getRankName(progress?.level ?? levelInfo.level)
-
- /* ================= REWARD ANIMATION ================= */
-
-  const [xpAnimated, setXpAnimated] = useState(0)
-  const [coinAnimated, setCoinAnimated] = useState(0)
-
-  function easeOutExpo(t: number) {
-    return t === 1
-      ? 1
-      : 1 - Math.pow(2, -10 * t)
-  }
-
-  useEffect(() => {
-    if (phase !== "result") return
-
-    let xpFrame = 0
-    let coinFrame = 0
-
-    const xpDuration = 650
-    const coinDuration = 950
-
-    const xpStart = performance.now()
-
-    const xpTarget = xpGain || 0
-    const coinTarget = coinGain || 0
-
-    function easeOutExpo(t: number) {
-      return t === 1
-        ? 1
-        : 1 - Math.pow(2, -10 * t)
-    }
-
-    /* ===== RESET ===== */
-
-    setXpAnimated(0)
-    setCoinAnimated(0)
-
-    /* ===== XP ===== */
-
-    const animateXp = (now: number) => {
-      const elapsed = now - xpStart
-
-      const progress = Math.min(
-        elapsed / xpDuration,
-        1
-      )
-
-      const eased = easeOutExpo(progress)
-
-      setXpAnimated(
-        Math.round(xpTarget * eased)
-      )
-
-      if (progress < 1) {
-        xpFrame = requestAnimationFrame(animateXp)
-      }
-    }
-
-    /* ===== COIN ===== */
-
-    const coinDelay = 140
-
-    const animateCoin = (now: number) => {
-      const elapsed = now - xpStart - coinDelay
-
-      if (elapsed < 0) {
-        coinFrame = requestAnimationFrame(animateCoin)
-        return
-      }
-
-      const progress = Math.min(
-        elapsed / coinDuration,
-        1
-      )
-
-      const eased = easeOutExpo(progress)
-
-      setCoinAnimated(
-        Math.round(coinTarget * eased)
-      )
-
-      if (progress < 1) {
-        coinFrame = requestAnimationFrame(animateCoin)
-      }
-    }
-
-    xpFrame = requestAnimationFrame(animateXp)
-    coinFrame = requestAnimationFrame(animateCoin)
-
-    return () => {
-      cancelAnimationFrame(xpFrame)
-      cancelAnimationFrame(coinFrame)
-    }
-  }, [phase, currentTurn])
-
-
-  /* ================= AUTO SCROLL ================= */
-
-  const selectedRef = useRef<HTMLButtonElement | null>(null)
-
-  useEffect(() => {
-    if (!selectedRef.current) return
-
-    selectedRef.current.scrollIntoView({
-      behavior: "smooth",
-      block: "center"
-    })
-  }, [selected])
-
+  // Day Meta
   useEffect(() => {
     let active = true
     if (!progress?.dayId) {
       setDayMeta(null)
       return
     }
-
-    api.getDay(progress.dayId)
-      .then(day => {
-        if (!active) return
-        setDayMeta(day ?? null)
-      })
-      .catch(() => {
-        if (!active) return
-        setDayMeta(null)
-      })
-
-    return () => {
-      active = false
-    }
+    api.getDay(progress.dayId).then(day => {
+      if (active) setDayMeta(day ?? null)
+    }).catch(() => {
+      if (active) setDayMeta(null)
+    })
+    return () => { active = false }
   }, [progress?.dayId])
 
-  /* ================= RESET TRANSLATE ================= */
+  // Preload Audio
+  useEffect(() => {
+    preloadAudioContext()
+  }, [])
 
+  // HP Hit Effect
+  useEffect(() => {
+    if (selected?.quality === "BAD") {
+      setIsHit(true)
+      const t = setTimeout(() => setIsHit(false), 300)
+      return () => clearTimeout(t)
+    }
+  }, [selected])
+
+  // XP & Coin Animation
+  useEffect(() => {
+    if (phase !== "result") return
+
+    let xpFrame = 0
+    let coinFrame = 0
+    const xpDuration = 650
+    const coinDuration = 950
+    const xpStart = performance.now()
+    const xpTarget = xpGain || 0
+    const coinTarget = coinGain || 0
+
+    const easeOutExpo = (t: number) => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t))
+
+    setXpAnimated(0)
+    setCoinAnimated(0)
+
+    const animateXp = (now: number) => {
+      const elapsed = now - xpStart
+      const prog = Math.min(elapsed / xpDuration, 1)
+      setXpAnimated(Math.round(xpTarget * easeOutExpo(prog)))
+      if (prog < 1) xpFrame = requestAnimationFrame(animateXp)
+    }
+
+    const animateCoin = (now: number) => {
+      const elapsed = now - xpStart - 140
+      if (elapsed < 0) {
+        coinFrame = requestAnimationFrame(animateCoin)
+        return
+      }
+      const prog = Math.min(elapsed / coinDuration, 1)
+      setCoinAnimated(Math.round(coinTarget * easeOutExpo(prog)))
+      if (prog < 1) coinFrame = requestAnimationFrame(animateCoin)
+    }
+
+    xpFrame = requestAnimationFrame(animateXp)
+    coinFrame = requestAnimationFrame(animateCoin)
+    return () => {
+      cancelAnimationFrame(xpFrame)
+      cancelAnimationFrame(coinFrame)
+    }
+  }, [phase, currentTurn, xpGain, coinGain])
+
+  // Scroll to selected
+  useEffect(() => {
+    if (selectedRef.current) {
+      selectedRef.current.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+  }, [selected])
+
+  // Reset Translate
   useEffect(() => {
     setShowTranslate?.(false)
-  }, [safeCurrent])
+  }, [safeCurrent, setShowTranslate])
 
-  /* ================= EVENT ================= */
+  // Intro Logic
+  useEffect(() => {
+    if (!progress?.stageId) return
+    let active = true
+    setShowIntro(false)
+    setSceneData(null)
 
+    const isSeen = typeof window !== "undefined" && localStorage.getItem(`intro_seen_${progress.stageId}`) === "1"
+
+    api.getStageIntro(progress.stageId).then((scene) => {
+      if (!active || !scene) return
+      setSceneData(scene)
+      if (!isReplay && !isSeen) setShowIntro(true)
+    }).catch(() => {
+      setSceneData(null)
+      setShowIntro(false)
+    })
+    return () => { active = false }
+  }, [progress?.stageId, isReplay])
+
+  /* ================= CONDITIONAL RENDERS ================= */
+
+    // 1. Event Screens
   if (event?.type === "story") {
     return (
       <div className={styles.endingScreen}>
         <div className={styles.endingCard}>
+
+          {/* TITLE */}
           <h1>{event.data?.title || "Story"}</h1>
 
+          {/* IMAGE */}
           {event.data?.image && (
             <div className={styles.endingImageWrap}>
               <img src={event.data.image} />
             </div>
           )}
 
+          {/* CONTENT */}
           <p>{event.data?.content}</p>
 
-          <div className={styles.xpGain}>
-            ⭐ +{progress?.xp ?? 0} XP
+          {/* ================= HUD STYLE GAME ================= */}
+          <div className={styles.storyPlayerProfile}>
+            
+            {/* Header: Level & Rank */}
+            <div className={styles.storyPlayerHeader}>
+              <div className={styles.storyLevelBadge}>
+                <span className={styles.lvlLabel}>LEVEL</span>
+                <span className={styles.lvlValue}>{progress?.level ?? levelInfo.level}</span>
+              </div>
+              <div className={styles.storyRankName}>
+                {rankName}
+              </div>
+            </div>
+
+            {/* XP Progress Bar */}
+            <div className={styles.storyXpSection}>
+              <div className={styles.storyXpBarWrapper}>
+                <div 
+                  className={styles.storyXpFill} 
+                  style={{ width: `${(levelInfo?.ratio ?? 0) * 100}%` }}
+                />
+                <span className={styles.xpPercentText}>
+                  {Math.round((levelInfo?.ratio ?? 0) * 100)}%
+                </span>
+              </div>
+              
+            </div>
+
+            {/* Resources Row: Coins & Total XP */}
+            <div className={styles.storyResourceRow}>
+              {/* COIN */}
+              <div className={styles.storyResourceItem}>
+                <span className="material-symbols-rounded" style={{ color: '#ffc857' }}>paid</span>
+                <span className={`${styles.resValue} ${styles.resCoin}`}>
+                  {(progress?.coins ?? 0).toLocaleString()}
+                </span>
+              </div>
+
+              {/* XP */}
+              <div className={styles.storyResourceItem}>
+                <span className={styles.resIcon}>⭐</span>
+                <span className={`${styles.resValue} ${styles.resXp}`}>
+                  {(progress?.xp ?? 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
           </div>
 
+          {/* ACTIONS */}
           <div className={styles.endingActions}>
             <button className={styles.nextBtn} onClick={onNext}>
               Tiếp tục
@@ -253,11 +312,16 @@ export default function GameScreen({
 
             <button
               className={styles.homeBtnSecondary}
-              onClick={() => window.location.href = "/"}
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.location.href = "/"
+                }
+              }}
             >
-              Về Home
+              Tạm nghỉ
             </button>
           </div>
+
         </div>
       </div>
     )
@@ -267,138 +331,164 @@ export default function GameScreen({
     return (
       <div className={styles.endingScreen}>
         <div className={styles.endingCard}>
-
-          {/* TITLE */}
-          <h1 className={styles.endingTitle}>
-            {event.data?.title || "Ending"}
-          </h1>
-
-          {/* IMAGE */}
-          {event.data?.image && (
-            <div className={styles.endingImageWrap}>
-              <img src={event.data.image} alt="ending" />
-            </div>
-          )}
-
-          {/* MESSAGE */}
-          <p className={styles.endingMessage}>
-            {event.data?.message}
-          </p>
-
-          {/* TYPE BADGE */}
+          <h1 className={styles.endingTitle}>{event.data?.title || "Ending"}</h1>
+          {event.data?.image && <div className={styles.endingImageWrap}><img src={event.data.image} alt="ending" /></div>}
+          <p className={styles.endingMessage}>{event.data?.message}</p>
           <div className={styles.endingType}>
             {event.data?.type === "GOOD" && "✨ Good Ending"}
             {event.data?.type === "NORMAL" && "⚖ Normal Ending"}
             {event.data?.type === "BAD" && "💀 Bad Ending"}
           </div>
 
-          {/* ACTIONS */}
-          <div className={styles.endingActions}>
-            <button
-              className={styles.nextBtn}
-              onClick={onNext}
-            >
-              Sang ngày tiếp theo
-            </button>
+          {/* ================= HUD STYLE GAME ================= */}
+          <div className={styles.storyPlayerProfile}>
+            
+            {/* Header: Level & Rank */}
+            <div className={styles.storyPlayerHeader}>
+              <div className={styles.storyLevelBadge}>
+                <span className={styles.lvlLabel}>LEVEL</span>
+                <span className={styles.lvlValue}>{progress?.level ?? levelInfo.level}</span>
+              </div>
+              <div className={styles.storyRankName}>
+                {rankName}
+              </div>
+            </div>
+            
+            {/* XP Progress Bar */}
+            <div className={styles.storyXpSection}>
+              <div className={styles.storyXpBarWrapper}>
+                <div 
+                  className={styles.storyXpFill} 
+                  style={{ width: `${(levelInfo?.ratio ?? 0) * 100}%` }}
+                />
+                <span className={styles.xpPercentText}>
+                  {Math.round((levelInfo?.ratio ?? 0) * 100)}%
+                </span>
+              </div>
+              
+            </div>
 
-            <button
-              className={styles.homeBtnSecondary}
-              onClick={() => window.location.href = "/"}
-            >
-              Về Home
-            </button>
+            {/* Resources Row: Coins & Total XP */}
+            <div className={styles.storyResourceRow}>
+              {/* COIN */}
+              <div className={styles.storyResourceItem}>
+                <span className="material-symbols-rounded" style={{ color: '#ffc857' }}>paid</span>
+                <span className={`${styles.resValue} ${styles.resCoin}`}>
+                  {(progress?.coins ?? 0).toLocaleString()}
+                </span>
+              </div>
+
+              {/* XP */}
+              <div className={styles.storyResourceItem}>
+                <span className={styles.resIcon}>⭐</span>
+                <span className={`${styles.resValue} ${styles.resXp}`}>
+                  {(progress?.xp ?? 0).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
           </div>
 
+          <div className={styles.endingActions}>
+            <button className={styles.nextBtn} onClick={onNext}>Sang ngày tiếp theo</button>
+            <button className={styles.homeBtnSecondary} onClick={() => window.location.href = "/"}>Về Home</button>
+          </div>
         </div>
       </div>
     )
   }
 
+  // Final & Replay events (giữ nguyên logic của bạn...)
   if (event?.type === "final") {
     return (
-      <div className={`${styles.endingScreen} ${styles.final}`}> 
-        <div className={styles.fireworks}>
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
-
-        <div className={styles.endingCard}>
-          <h1 className={styles.endingTitle}>
-            {event.data?.title || "Hành trình hoàn tất"}
-          </h1>
-
-          {event.data?.image && (
-            <div className={styles.endingImageWrap}>
-              <img src={event.data.image} alt="final" />
+        <div className={`${styles.endingScreen} ${styles.final}`}> 
+          <div className={styles.fireworks}><span/><span/><span/><span/><span/><span/></div>
+          <div className={styles.endingCard}>
+            <h1 className={styles.endingTitle}>{event.data?.title || "Hành trình hoàn tất"}</h1>
+            {event.data?.image && <div className={styles.endingImageWrap}><img src={event.data.image} alt="final" /></div>}
+            <p className={styles.endingMessage}>{event.data?.message || "Bạn đã hoàn thành mọi thử thách!"}</p>
+            <div className={styles.endingActions}>
+              <button className={styles.nextBtn} onClick={() => window.location.href = "/"}>Về Home</button>
             </div>
-          )}
-
-          <p className={styles.endingMessage}>
-            {event.data?.message || "Bạn đã hoàn thành mọi thử thách và sống sót qua cuộc sống Nhật Bản khắc nghiệt!"}
-          </p>
-
-          <div className={styles.endingActions}>
-            <button
-              className={styles.nextBtn}
-              onClick={() => window.location.href = "/"}
-            >
-              Về Home
-            </button>
           </div>
         </div>
-      </div>
-    )
+      )
   }
 
   if (event?.type === "replayComplete") {
     return (
-      <div className={styles.endingScreen}>
-        <div className={styles.endingCard}>
-          <div className={styles.practiceBadge}>Ôn lại</div>
-
-          <h1 className={styles.endingTitle}>
-            {event.data?.title || "Luyện tập hoàn tất"}
-          </h1>
-
-          <p className={styles.endingMessage}>
-            {event.data?.message || "Bạn đã ôn lại màn này. Ôn tập lại không cộng XP, tiền hoặc level."}
-          </p>
-
-          <div className={styles.practiceNote}>
-            Không cộng XP · Không cộng tiền · Không đổi tiến trình chính
+        <div className={styles.endingScreen}>
+          <div className={styles.endingCard}>
+            <div className={styles.practiceBadge}>Ôn lại</div>
+            <h1 className={styles.endingTitle}>{event.data?.title || "Luyện tập hoàn tất"}</h1>
+            <p className={styles.endingMessage}>{event.data?.message || "Bạn đã ôn lại màn này."}</p>
+            <div className={styles.endingActions}>
+              <button className={styles.nextBtn} onClick={onNext}>Về hồ sơ</button>
+            </div>
           </div>
+        </div>
+      )
+  }
 
-          <div className={styles.endingActions}>
-            <button className={styles.nextBtn} onClick={onNext}>
-              Về hồ sơ
+  // 2. Intro Stage
+  if ((showIntro || isExiting) && sceneData) {
+    return (
+      <div className={`${styles.introOverlay} ${isExiting ? styles.fadeOut : ''}`}>
+        <div className={`${styles.introCard} ${isExiting ? styles.popOut : ''}`}>
+          {sceneData.image && (
+            <div className={styles.introImage}>
+              <img src={sceneData.image} alt="Stage Intro" />
+              <div className={styles.imageOverlay}></div>
+            </div>
+          )}
+          
+          <div className={styles.introContent}>
+            <div className={styles.titleWrapper}>
+              <span className={styles.subtitle}>HÀNH TRÌNH MỚI</span>
+              <h2 className={styles.introTitle}>{sceneData.title}</h2>
+            </div>
+            
+            <p className={styles.introText}>{sceneData.content}</p>
+            
+            <button 
+              className={styles.introStartBtn} 
+              onClick={async () => {
+                // 1. Kích hoạt animation đóng
+                setIsExiting(true);
+                
+                // 2. Chờ animation chạy xong (khoảng 400ms) rồi mới xóa hẳn
+                setTimeout(() => {
+                  setShowIntro(false);
+                  setIsExiting(false);
+                }, 400);
+
+                // 3. Logic API giữ nguyên
+                localStorage.setItem(`intro_seen_${progress.stageId}`, "1");
+                await api.markIntroSeen(progress.stageId).catch(() => {});
+              }}
+            >
+              <span>{sceneData.buttonText || "Bắt đầu ngay"}</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. Loading
+  if (!progress || !safeCurrent || isLoadingQuestion) {
+    return (
+      <div className={styles.loadingWrapper}>
+        <div className={styles.loadingCard}>
+          <div className={styles.spinner} />
+          <div className={styles.loadingText}>Đang tải câu hỏi...</div>
         </div>
       </div>
     )
   }
 
-  /* ================= LOADING ================= */
 
-if (!progress || !safeCurrent || isLoadingQuestion){
-  return (
-    <div className={styles.loadingWrapper}>
-      <div className={styles.loadingCard}>
-        <div className={styles.spinner} />
-        <div className={styles.loadingText}>Đang tải câu hỏi...</div>
-        <div className={styles.loadingSub}>
-          Vui lòng chờ trong giây lát
-        </div>
-      </div>
-    </div>
-  )
-}
-
-  /* ================= HP ================= */
 
   /* ================= HP LOGIC ================= */
   const MAX_HP = 5;
@@ -422,19 +512,7 @@ if (!progress || !safeCurrent || isLoadingQuestion){
     return "🙂";
   };
 
-  /* ================= RENDER ================= */
 
-  const currentDay = days.find(d => d.id === progress?.dayId)
-
-  const stageNumberInDay = (() => {
-    if (!currentDay?.stages?.length || !progress?.stageId) return null
-
-    const index = currentDay.stages.findIndex(
-      (s: any) => s.id === progress.stageId
-    )
-
-    return index >= 0 ? index + 1 : null
-  })()
 
   return (
     <div
@@ -480,6 +558,10 @@ if (!progress || !safeCurrent || isLoadingQuestion){
             {progress.stageName && ` : ${progress.stageName}`}
           </div>
 
+          <div className={styles.stageSub}>
+            Câu {currentTurn} / {progress.stageGoal}
+          </div>
+
         </div>
 
         
@@ -512,9 +594,9 @@ if (!progress || !safeCurrent || isLoadingQuestion){
           </div>
 
           <div className={styles.resourceRow}>
-            <div className={styles.coinBadge}>
+            <div className={`${styles.coinBadge} ${isCoinDeducting ? styles.coinLoss : ""}`}>
               <span className="material-symbols-rounded">paid</span>
-               {(progress.coins ?? 0).toLocaleString("en-US")}
+              {(progress.coins ?? 0).toLocaleString("en-US")}
             </div>
 
             <div className={styles.xpBadge}>
@@ -629,27 +711,115 @@ if (!progress || !safeCurrent || isLoadingQuestion){
       {/* BOTTOM */}
       {phase === "idle" && (
         <>
-          {/* TRANSLATE */}
+          {/* NÚT FAB MỞ MENU */}
           <button
-            className={`${styles.fab} ${styles.translateFab} ${showTranslate ? styles.active : ""}`}
-            onClick={() => setShowTranslate?.((v: boolean) => !v)}
-            data-label={showTranslate ? "Ẩn dịch" : "Dịch"}
+            className={`${styles.fab} ${styles.supportFab}`}
+            onClick={() => setIsSupportOpen(true)}
           >
-            <span className="material-symbols-rounded">
-              {showTranslate ? "visibility_off" : "translate"}
-            </span>
+            <span className="material-symbols-rounded">tips_and_updates</span>
+            <span className={styles.fabLabel}>Hỗ trợ</span>
           </button>
 
-          {/* SKIP */}
-          <button
-            className={`${styles.fab} ${styles.skipFab}`}
-            onClick={onSkip}
-            data-label="Bỏ qua"
+          {/* OVERLAY MỜ */}
+          <div 
+            className={`${styles.sheetOverlay} ${isSupportOpen ? styles.show : ""}`} 
+            onClick={() => setIsSupportOpen(false)} 
+          />
+
+          {/* BOTTOM SHEET */}
+          <div 
+            className={`${styles.bottomSheet} ${isSupportOpen ? styles.open : ""}`}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
           >
-            <span className="material-symbols-rounded">
-              fast_forward
-            </span>
-          </button>
+            <div className={styles.sheetHandle} onClick={() => setIsSupportOpen(false)}></div>
+            <h3 className={styles.sheetTitle}>Công cụ hỗ trợ</h3>
+            
+            <div className={styles.sheetGrid}>
+              {/* TRANSLATE */}
+              <button
+                className={`
+                  ${styles.sheetItem} 
+                  ${showTranslate ? styles.active : ""} 
+                  ${(!usedTranslate && progress.coins < GAME_CONFIG.SUPPORT_COST.TRANSLATE) ? styles.disabled : ""}
+                `}
+                onClick={() => {
+                  // Nếu đã thanh toán rồi (usedTranslate), cho phép bật/tắt tự do
+                  if (usedTranslate) {
+                    setShowTranslate?.(!showTranslate);
+                    setIsSupportOpen(false);
+                    return;
+                  }
+
+                  const cost = GAME_CONFIG.SUPPORT_COST.TRANSLATE;
+                  // Nếu không đủ tiền, không làm gì cả (nút đã bị mờ)
+                  if (progress.coins < cost) return;
+
+                  handleUseCoin(cost);
+                  setUsedTranslate(true);
+                  setShowTranslate?.(true);
+                  setIsSupportOpen(false);
+                }}
+              >
+                <div className={styles.itemIcon}>
+                  <span className="material-symbols-rounded">
+                    {/* Hiện icon khóa nếu không đủ tiền và chưa mua */}
+                    {(!usedTranslate && progress.coins < GAME_CONFIG.SUPPORT_COST.TRANSLATE) 
+                      ? "lock" 
+                      : (showTranslate ? "visibility_off" : "translate")}
+                  </span>
+                </div>
+                <div className={styles.itemInfo}>
+                  <span className={styles.itemName}>Dịch tình huống</span>
+                  <span className={`
+                    ${styles.itemCost} 
+                    ${(!usedTranslate && progress.coins < GAME_CONFIG.SUPPORT_COST.TRANSLATE) ? styles.insufficient : ""}
+                  `}>
+                    {usedTranslate ? "Đã mở khóa" : `Phí: ${GAME_CONFIG.SUPPORT_COST.TRANSLATE} Coin`}
+                  </span>
+                </div>
+              </button>
+
+              {/* SKIP (VÉ THÔNG HÀNH) */}
+              <button
+                className={`
+                  ${styles.sheetItem} 
+                  ${progress.coins < GAME_CONFIG.SUPPORT_COST.SKIP ? styles.disabled : ""}
+                `}
+                onClick={() => {
+                  const cost = GAME_CONFIG.SUPPORT_COST.SKIP;
+                  if (progress.coins < cost) return;
+
+                  handleUseCoin(cost);
+                  onSkip();                 
+                  setIsSupportOpen(false);  
+                }}
+              >
+                <div className={`${styles.itemIcon} ${styles.skipIcon}`}>
+                  <span className="material-symbols-rounded">
+                    {progress.coins < GAME_CONFIG.SUPPORT_COST.SKIP ? "lock" : "fast_forward"}
+                  </span>
+                </div>
+                <div className={styles.itemInfo}>
+                  <span className={styles.itemName}>Bỏ qua tình huống</span>
+                  <span className={`
+                    ${styles.itemCost} 
+                    ${progress.coins < GAME_CONFIG.SUPPORT_COST.SKIP ? styles.insufficient : ""}
+                  `}>
+                    Phí: {GAME_CONFIG.SUPPORT_COST.SKIP} Coin
+                  </span>
+                </div>
+              </button>
+
+              <button className={styles.sheetItem} onClick={() => alert("Cảm ơn bạn!")}>
+                <div className={styles.itemIcon}><span className="material-symbols-rounded">chat_bubble</span></div>
+                <div className={styles.itemInfo}>
+                  <span className={styles.itemName}>Góp ý & Báo lỗi</span>
+                  <span className={styles.itemCost}>Miễn phí</span>
+                </div>
+              </button>
+            </div>
+          </div>
         </>
       )}
 

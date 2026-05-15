@@ -67,14 +67,15 @@ function withReadyAudio(play: (ctx: AudioContext) => void) {
   const ctx = getCtx()
   if (!ctx) return
 
-  if (ctx.state === "running") {
-    play(ctx)
-    return
+  const run = () => {
+    if (ctx.state !== "running") {
+      ctx.resume().then(() => play(ctx))
+    } else {
+      play(ctx)
+    }
   }
 
-  void unlockAudioContext().then(ok => {
-    if (ok) play(ctx)
-  })
+  run()
 }
 
 /* ================= PRELOAD ================= */

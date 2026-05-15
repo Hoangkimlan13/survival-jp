@@ -28,6 +28,23 @@ export const api = {
     return Array.isArray(days) ? days.find((day: any) => Number(day.id) === Number(dayId)) : null
   },
 
+
+async getStageIntro(stageId: number) {
+  const res = await fetch(`/api/stage-intro?stageId=${stageId}`);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch intro");
+  }
+
+  return res.json();
+},
+
+async markIntroSeen(stageId: number) {
+  localStorage.setItem(`intro_seen_${stageId}`, "1");
+  return { success: true };
+},
+
+
 /* ================= STORIES ================= */
 async getStories(progress: Progress, blockStory = false) {
   if (blockStory) return []

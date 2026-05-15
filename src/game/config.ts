@@ -17,7 +17,7 @@ export const QUALITY_SCORE: Record<ChoiceQuality, number> = {
 }
 
 export const QUALITY_COINS: Record<ChoiceQuality, number> = {
-  PERFECT: 15,
+  PERFECT: 6,
   GOOD: 4,
   OK: 2,
   BAD: -1
@@ -108,6 +108,13 @@ export const GAME_CONFIG = {
     OK: 5,
     BAD: 0
   },
+
+
+  SUPPORT_COST: {
+    TRANSLATE: 5,
+    SKIP: 18
+  },
+
 
   COINS: QUALITY_COINS,
 
